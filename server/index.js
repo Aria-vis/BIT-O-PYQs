@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import { connectDB } from './db.js';
+import authRoutes from './routes/auth.js';
 
 dotenv.config();
 
@@ -18,6 +19,8 @@ const limiter = rateLimit({
   message: { error: 'Too many requests, please try again later.' }
 });
 app.use(limiter);
+
+app.use('/api/auth', authRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'success', message: 'Backend is fully operational!' });
