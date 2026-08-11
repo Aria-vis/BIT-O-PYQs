@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post('/signup', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { name, email, password } = req.body;
 
     const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     if (userCheck.rows.length > 0) {
@@ -19,13 +19,13 @@ router.post('/signup', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = await pool.query(
-      'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email',
-      [email, hashedPassword]
+      'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email',
+      [name, email, hashedPassword]
     );
 
     const token = jwt.sign(
       { userId: newUser.rows[0].id }, 
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET, 
       { expiresIn: '7d' }
     );
 

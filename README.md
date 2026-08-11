@@ -13,6 +13,14 @@
 - **Filename Parsing LLM**: Groq API (Structured JSON Mode)
 - **Authentication**: JWT + bcrypt
 
+## Database Setup
+
+This project uses Neon PostgreSQL with `pgvector` for local embedding storage.
+1. Create a free Neon account.
+2. Run `CREATE EXTENSION IF NOT EXISTS vector;` in the SQL editor.
+3. Run the schema creation commands from the `Day 4` roadmap outline.
+4. Add the Neon connection string to the server's `.env` file as `DATABASE_URL`.
+
 ## 📁 Repository Structure
 
 ```text
