@@ -1,30 +1,32 @@
-import { useQuery } from '@tanstack/react-query'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['healthCheck'],
-    queryFn: async () => {
-      const res = await fetch('http://localhost:5000/health')
-      if (!res.ok) throw new Error('Network response was not ok')
-      return res.json()
-    },
-  })
-
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-4">
-      <h1 className="mb-4 text-4xl font-bold text-blue-600">BIT'O PYQs</h1>
-      <div className="rounded-lg bg-white p-6 shadow-md">
-        <h2 className="text-xl font-semibold mb-2">Backend Connection Status:</h2>
-        {isLoading && <p className="text-yellow-600">Connecting to server...</p>}
-        {error && <p className="text-red-600">Error: {error.message}</p>}
-        {data && (
-          <p className="text-green-600 font-medium">
-            ✅ {data.message}
-          </p>
-        )}
-      </div>
-    </div>
-  )
+    <Router>
+      <Routes>
+        {/* Redirect the root URL straight to login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        
+        {/* Public Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        
+        {/* Protected Route */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
