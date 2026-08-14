@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import { connectDB } from './db.js';
 import authRoutes from './routes/auth.js';
 import pyqRoutes from './routes/pyqs.js';
+import hierarchyRoutes from './routes/hierarchy.js';
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 app.use('/api/auth', authRoutes);
+app.use('/api/hierarchy', hierarchyRoutes);
 app.use('/api/pyqs', pyqRoutes);
 
 app.get('/health', (req, res) => {
