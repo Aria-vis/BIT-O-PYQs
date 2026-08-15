@@ -1,13 +1,9 @@
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import HierarchyPicker from '../components/HierarchyPicker';
+import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
   const { logout } = useContext(AuthContext);
-
-  const [selectedUniversity, setSelectedUniversity] = useState('');
-  const [selectedCourse, setSelectedCourse] = useState('');
-  const [selectedSubject, setSelectedSubject] = useState('');
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -23,18 +19,22 @@ export default function Dashboard() {
         </div>
 
         <p className="text-gray-600 mb-6">
-          Welcome to the VIP area! Let's test the hierarchy picker below.
+          Welcome to the VIP area! Choose an action below to get started.
         </p>
 
-        {/* The Reusable Hierarchy Picker */}
-        <HierarchyPicker
-          selectedUniversity={selectedUniversity}
-          setSelectedUniversity={setSelectedUniversity}
-          selectedCourse={selectedCourse}
-          setSelectedCourse={setSelectedCourse}
-          selectedSubject={selectedSubject}
-          setSelectedSubject={setSelectedSubject}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+          <Link to="/upload-text" className="block bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition text-center hover:border-blue-300">
+            <div className="text-4xl mb-3">📄</div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Upload Text</h2>
+            <p className="text-sm text-gray-600">Paste raw exam text and let our parser auto-split it.</p>
+          </Link>
+
+          <div className="block bg-gray-50 p-6 rounded-xl border border-gray-200 text-center opacity-60">
+            <div className="text-4xl mb-3">🔍</div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Search PYQs</h2>
+            <p className="text-sm text-gray-600">Coming later in the roadmap.</p>
+          </div>
+        </div>
       </div>
     </div>
   );
