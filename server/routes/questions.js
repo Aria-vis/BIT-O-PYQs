@@ -3,6 +3,7 @@ import pool from '../db.js';
 import verifyToken from '../middleware/authMiddleware.js';
 import { splitQuestions } from '../utils/textParser.js';
 import upload from '../middleware/uploadMiddleware.js';
+import { preprocessImage, runOCR } from '../utils/ocrParser.js';
 
 const router = express.Router();
 
@@ -63,29 +64,38 @@ router.post('/text', verifyToken, async (req, res) => {
 router.post('/image', verifyToken, (req, res) => {
   const uploadSingle = upload.single('image');
 
-  uploadSingle(req, res, (err) => {
+  uploadSingle(req, res, async (err) => {
     if (err) {
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ error: 'File size exceeds the 5MB limit.' });
-      }
-      if (err.message === 'INVALID_FILE_TYPE') {
-        return res.status(400).json({ error: 'Invalid file type. Only JPEG, PNG, and WEBP are allowed.' });
-      }
+      if (err.code === 'LIMIT_FILE_SIZE') return res.status(400).json({ error: 'File size exceeds the 5MB limit.' });
+      if (err.message === 'INVALID_FILE_TYPE') return res.status(400).json({ error: 'Invalid file type. Only JPEG, PNG, and WEBP are allowed.' });
       return res.status(500).json({ error: `Upload error: ${err.message}` });
     }
 
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided.' });
     }
-    
-    res.status(200).json({
-      message: 'Image successfully received in memory.',
-      fileDetails: {
-        filename: req.file.originalname,
-        mimetype: req.file.mimetype,
-        size: req.file.size
+
+    try {
+      const processedBuffer = await preprocessImage(req.file.buffer);
+      const { text, confidence } = await runOCR(processedBuffer);
+
+      if (!text || confidence < 40) {
+        return res.status(422).json({ 
+          error: 'OCR failed to read the image clearly. Please try a better lit or clearer photo.',
+          confidence: Math.round(confidence)
+        });
       }
-    });
+
+      res.status(200).json({
+        message: 'Image processed successfully.',
+        extractedText: text,
+        confidence: Math.round(confidence)
+      });
+
+    } catch (error) {
+      console.error('Processing Pipeline Error:', error);
+      res.status(500).json({ error: 'Failed to process the image.' });
+    }
   });
 });
 
