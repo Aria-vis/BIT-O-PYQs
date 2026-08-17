@@ -29,6 +29,12 @@ export default function Dashboard() {
             <p className="text-sm text-gray-600">Paste raw exam text and let our parser auto-split it.</p>
           </Link>
 
+          <Link to="/upload-image" className="block bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition text-center hover:border-blue-300">
+            <div className="text-4xl mb-3">📸</div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Upload Image</h2>
+            <p className="text-sm text-gray-600">Snap a photo and let our AI read the text.</p>
+          </Link>
+
           <div className="block bg-gray-50 p-6 rounded-xl border border-gray-200 text-center opacity-60">
             <div className="text-4xl mb-3">🔍</div>
             <h2 className="text-xl font-bold text-gray-800 mb-2">Search PYQs</h2>

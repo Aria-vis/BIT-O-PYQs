@@ -4,6 +4,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import UploadText from './pages/UploadText';
+import UploadImage from './pages/UploadImage';
 
 function App() {
   return (
@@ -25,7 +26,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
         {/* Protected Route */}
         <Route
           path="/upload-text"
@@ -35,6 +36,17 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
+        {/* Protected Route */}
+        <Route 
+          path="/upload-image" 
+          element={
+            <ProtectedRoute>
+              <UploadImage />
+            </ProtectedRoute>
+          }
+        />
+
       </Routes>
     </Router>
   );

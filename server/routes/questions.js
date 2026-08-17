@@ -4,6 +4,7 @@ import verifyToken from '../middleware/authMiddleware.js';
 import { splitQuestions } from '../utils/textParser.js';
 import upload from '../middleware/uploadMiddleware.js';
 import { preprocessImage, runOCR } from '../utils/ocrParser.js';
+import { uploadToCloudinary } from '../utils/cloudinary.js';
 
 const router = express.Router();
 
@@ -97,6 +98,63 @@ router.post('/image', verifyToken, (req, res) => {
       res.status(500).json({ error: 'Failed to process the image.' });
     }
   });
+});
+
+router.post('/image/confirm', verifyToken, upload.single('image'), async (req, res) => {
+  const { text, subject_id, semester, year, exam_type } = req.body;
+  const uploader_id = req.user.userId;
+
+  if (!text || !subject_id || !req.file) {
+    return res.status(400).json({ error: 'Image, text, and subject_id are required' });
+  }
+
+  try {
+    await pool.query('BEGIN');
+
+    const processedBuffer = await preprocessImage(req.file.buffer);
+    const cloudinaryResult = await uploadToCloudinary(processedBuffer);
+    const image_url = cloudinaryResult.secure_url;
+
+    let paperResult = await pool.query(
+      `SELECT id FROM question_papers WHERE subject_id = $1 AND semester = $2 AND year = $3 AND exam_type = $4`,
+      [subject_id, semester || null, year || null, exam_type || null]
+    );
+
+    let paper_id;
+    if (paperResult.rows.length > 0) {
+      paper_id = paperResult.rows[0].id;
+    } else {
+      const newPaper = await pool.query(
+        `INSERT INTO question_papers (subject_id, semester, year, exam_type) VALUES ($1, $2, $3, $4) RETURNING id`,
+        [subject_id, semester || null, year || null, exam_type || null]
+      );
+      paper_id = newPaper.rows[0].id;
+    }
+
+    const questionsArray = splitQuestions(text);
+    const insertedQuestions = [];
+
+    for (const qText of questionsArray) {
+      const qResult = await pool.query(
+        `INSERT INTO questions (paper_id, uploader_id, raw_text, clean_text, image_url)
+         VALUES ($1, $2, $3, $4, $5) RETURNING id, clean_text`,
+        [paper_id, uploader_id, qText, qText, image_url]
+      );
+      insertedQuestions.push(qResult.rows[0]);
+    }
+
+    await pool.query('COMMIT');
+    res.status(201).json({ 
+      message: `Successfully saved ${insertedQuestions.length} question(s).`, 
+      questions: insertedQuestions,
+      image_url
+    });
+
+  } catch (err) {
+    await pool.query('ROLLBACK');
+    console.error('Confirm Upload Error:', err);
+    res.status(500).json({ error: 'Server error during final upload' });
+  }
 });
 
 export default router;
