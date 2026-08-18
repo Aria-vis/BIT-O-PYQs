@@ -1,22 +1,23 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import HierarchyPicker from '../components/HierarchyPicker';
+import { parseFilename } from '../utils/filenameParser';
 
 export default function UploadImage() {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
-  
+
   const [ocrText, setOcrText] = useState('');
   const [confidence, setConfidence] = useState(null);
   const [isExtracting, setIsExtracting] = useState(false);
-  
+
   const [selectedUniversity, setSelectedUniversity] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [semester, setSemester] = useState('');
   const [year, setYear] = useState('');
   const [examType, setExamType] = useState('');
-  
+
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
   const [successData, setSuccessData] = useState(null);
@@ -24,13 +25,20 @@ export default function UploadImage() {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
-    
+
     setFile(selectedFile);
     setPreviewUrl(URL.createObjectURL(selectedFile));
     setOcrText('');
     setConfidence(null);
     setError('');
     setSuccessData(null);
+
+    const { guesses, confidence } = parseFilename(selectedFile.name);
+    if (confidence > 0) {
+      if (guesses.semester) setSemester(guesses.semester);
+      if (guesses.year) setYear(guesses.year);
+      if (guesses.examType) setExamType(guesses.examType);
+    }
   };
 
   const handleExtractText = async () => {
@@ -46,7 +54,7 @@ export default function UploadImage() {
       const res = await fetch('http://localhost:5000/api/questions/image', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
-        body: formData, 
+        body: formData,
       });
 
       const data = await res.json();
@@ -125,7 +133,7 @@ export default function UploadImage() {
             </div>
 
             {ocrText && (
-              <HierarchyPicker 
+              <HierarchyPicker
                 selectedUniversity={selectedUniversity} setSelectedUniversity={setSelectedUniversity}
                 selectedCourse={selectedCourse} setSelectedCourse={setSelectedCourse}
                 selectedSubject={selectedSubject} setSelectedSubject={setSelectedSubject}
@@ -147,9 +155,9 @@ export default function UploadImage() {
               </div>
 
               <div className="grid grid-cols-3 gap-2">
-                <input type="number" placeholder="Sem" value={semester} onChange={(e)=>setSemester(e.target.value)} className="border p-2 rounded text-sm"/>
-                <input type="number" placeholder="Year" value={year} onChange={(e)=>setYear(e.target.value)} className="border p-2 rounded text-sm"/>
-                <select value={examType} onChange={(e)=>setExamType(e.target.value)} className="border p-2 rounded text-sm">
+                <input type="number" placeholder="Sem" value={semester} onChange={(e) => setSemester(e.target.value)} className="border p-2 rounded text-sm" />
+                <input type="number" placeholder="Year" value={year} onChange={(e) => setYear(e.target.value)} className="border p-2 rounded text-sm" />
+                <select value={examType} onChange={(e) => setExamType(e.target.value)} className="border p-2 rounded text-sm">
                   <option value="">Type</option><option value="Midterm">Midterm</option><option value="Final">Final</option>
                 </select>
               </div>

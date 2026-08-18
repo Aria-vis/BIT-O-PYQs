@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import HierarchyPicker from '../components/HierarchyPicker';
+import { parseFilename } from '../utils/filenameParser';
 
 export default function UploadText() {
   const [selectedUniversity, setSelectedUniversity] = useState('');
@@ -11,10 +12,19 @@ export default function UploadText() {
   const [year, setYear] = useState('');
   const [examType, setExamType] = useState('');
   const [rawText, setRawText] = useState('');
-
+  const [filenameInput, setFilenameInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [successData, setSuccessData] = useState(null);
+
+  const handleFilenameBlur = () => {
+    const { guesses, confidence } = parseFilename(filenameInput);
+    if (confidence > 0) {
+      if (guesses.semester && !semester) setSemester(guesses.semester);
+      if (guesses.year && !year) setYear(guesses.year);
+      if (guesses.examType && !examType) setExamType(guesses.examType);
+    }
+  };
 
   const cleanText = (text) => text.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
   const previewSplits = () => {
@@ -37,7 +47,7 @@ export default function UploadText() {
       const token = localStorage.getItem('token');
       const res = await fetch('http://localhost:5000/api/questions/text', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -86,13 +96,26 @@ export default function UploadText() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          <HierarchyPicker 
+          <HierarchyPicker
             selectedUniversity={selectedUniversity} setSelectedUniversity={setSelectedUniversity}
             selectedCourse={selectedCourse} setSelectedCourse={setSelectedCourse}
             selectedSubject={selectedSubject} setSelectedSubject={setSelectedSubject}
           />
 
           <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Auto-Fill from Filename (Optional)</h3>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Source Document Name</label>
+              <input
+                type="text"
+                placeholder="e.g. CS201_Sem5_2023_Midterm.pdf"
+                value={filenameInput}
+                onChange={(e) => setFilenameInput(e.target.value)}
+                onBlur={handleFilenameBlur}
+                className="w-full border rounded p-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Paste your file's name here and click away to automatically fill the details below.</p>
+            </div>
             <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Paper Details (Optional)</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -118,11 +141,11 @@ export default function UploadText() {
 
           <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Paste Questions</h3>
-            <textarea 
-              rows="8" 
+            <textarea
+              rows="8"
               placeholder="Paste your exam text here... (e.g. '1. What is React? \n 2. Explain hooks.')"
-              value={rawText} 
-              onChange={(e) => setRawText(e.target.value)} 
+              value={rawText}
+              onChange={(e) => setRawText(e.target.value)}
               className="w-full border border-gray-300 rounded p-3 font-mono text-sm focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -143,9 +166,9 @@ export default function UploadText() {
             </div>
           )}
 
-          <button 
-            type="submit" 
-            disabled={isLoading} 
+          <button
+            type="submit"
+            disabled={isLoading}
             className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 text-lg transition shadow-md"
           >
             {isLoading ? 'Processing & Saving...' : 'Upload Questions'}
