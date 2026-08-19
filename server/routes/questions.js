@@ -5,6 +5,7 @@ import { splitQuestions } from '../utils/textParser.js';
 import upload from '../middleware/uploadMiddleware.js';
 import { preprocessImage, runOCR } from '../utils/ocrParser.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
+import { parseFilenameWithLLM } from '../utils/llmFallback.js';
 
 const router = express.Router();
 
@@ -41,18 +42,23 @@ router.post('/text', verifyToken, async (req, res) => {
     const insertedQuestions = [];
 
     for (const qText of questionsArray) {
+      const metadata_hints = JSON.stringify({
+        inferred_from_filename: req.body.hints || {},
+        final_confirmed_values: { semester, year, exam_type }
+      });
+
       const qResult = await pool.query(
-        `INSERT INTO questions (paper_id, uploader_id, raw_text, clean_text)
-         VALUES ($1, $2, $3, $4) RETURNING id, clean_text`,
-        [paper_id, uploader_id, qText, qText] 
+        `INSERT INTO questions (paper_id, uploader_id, raw_text, clean_text, metadata_hints)
+         VALUES ($1, $2, $3, $4, $5) RETURNING id, clean_text`,
+        [paper_id, uploader_id, qText, qText, metadata_hints]
       );
       insertedQuestions.push(qResult.rows[0]);
     }
 
     await pool.query('COMMIT');
-    res.status(201).json({ 
-      message: `Successfully saved ${insertedQuestions.length} question(s).`, 
-      questions: insertedQuestions 
+    res.status(201).json({
+      message: `Successfully saved ${insertedQuestions.length} question(s).`,
+      questions: insertedQuestions
     });
 
   } catch (err) {
@@ -81,7 +87,7 @@ router.post('/image', verifyToken, (req, res) => {
       const { text, confidence } = await runOCR(processedBuffer);
 
       if (!text || confidence < 40) {
-        return res.status(422).json({ 
+        return res.status(422).json({
           error: 'OCR failed to read the image clearly. Please try a better lit or clearer photo.',
           confidence: Math.round(confidence)
         });
@@ -135,17 +141,24 @@ router.post('/image/confirm', verifyToken, upload.single('image'), async (req, r
     const insertedQuestions = [];
 
     for (const qText of questionsArray) {
+      const parsedHints = typeof req.body.hints === 'string' ? JSON.parse(req.body.hints) : (req.body.hints || {});
+
+      const metadata_hints = JSON.stringify({
+        inferred_from_filename: parsedHints,
+        final_confirmed_values: { semester, year, exam_type }
+      });
+
       const qResult = await pool.query(
-        `INSERT INTO questions (paper_id, uploader_id, raw_text, clean_text, image_url)
-         VALUES ($1, $2, $3, $4, $5) RETURNING id, clean_text`,
-        [paper_id, uploader_id, qText, qText, image_url]
+        `INSERT INTO questions (paper_id, uploader_id, raw_text, clean_text, image_url, metadata_hints)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, clean_text`,
+        [paper_id, uploader_id, qText, qText, image_url, metadata_hints]
       );
       insertedQuestions.push(qResult.rows[0]);
     }
 
     await pool.query('COMMIT');
-    res.status(201).json({ 
-      message: `Successfully saved ${insertedQuestions.length} question(s).`, 
+    res.status(201).json({
+      message: `Successfully saved ${insertedQuestions.length} question(s).`,
       questions: insertedQuestions,
       image_url
     });
@@ -155,6 +168,13 @@ router.post('/image/confirm', verifyToken, upload.single('image'), async (req, r
     console.error('Confirm Upload Error:', err);
     res.status(500).json({ error: 'Server error during final upload' });
   }
+});
+
+router.post('/parse-filename', verifyToken, async (req, res) => {
+  const { filename } = req.body;
+  if (!filename) return res.status(400).json({ error: 'Filename required' });
+  const hints = await parseFilenameWithLLM(filename);
+  res.status(200).json({ hints });
 });
 
 export default router;

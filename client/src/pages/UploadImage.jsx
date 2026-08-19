@@ -22,22 +22,41 @@ export default function UploadImage() {
   const [error, setError] = useState('');
   const [successData, setSuccessData] = useState(null);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
 
     setFile(selectedFile);
     setPreviewUrl(URL.createObjectURL(selectedFile));
-    setOcrText('');
-    setConfidence(null);
-    setError('');
-    setSuccessData(null);
+    setOcrText(''); setConfidence(null); setError(''); setSuccessData(null);
 
     const { guesses, confidence } = parseFilename(selectedFile.name);
-    if (confidence > 0) {
+
+    if (confidence >= 50) {
       if (guesses.semester) setSemester(guesses.semester);
       if (guesses.year) setYear(guesses.year);
       if (guesses.examType) setExamType(guesses.examType);
+    } else {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:5000/api/questions/parse-filename', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ filename: selectedFile.name })
+        });
+
+        const data = await res.json();
+        if (data.hints) {
+          if (data.hints.semester && !semester) setSemester(data.hints.semester);
+          if (data.hints.year && !year) setYear(data.hints.year);
+          if (data.hints.examType && !examType) setExamType(data.hints.examType);
+        }
+      } catch (err) {
+        console.warn('LLM Fallback skipped:', err.message);
+      }
     }
   };
 
