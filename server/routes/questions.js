@@ -6,6 +6,9 @@ import upload from '../middleware/uploadMiddleware.js';
 import { preprocessImage, runOCR } from '../utils/ocrParser.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
 import { parseFilenameWithLLM } from '../utils/llmFallback.js';
+import { generateEmbedding, generateTextHash, initModel } from '../utils/embeddings.js';
+
+initModel().catch(console.error);
 
 const router = express.Router();
 
@@ -42,15 +45,33 @@ router.post('/text', verifyToken, async (req, res) => {
     const insertedQuestions = [];
 
     for (const qText of questionsArray) {
+      const parsedHints = req.body.hints ? (typeof req.body.hints === 'string' ? JSON.parse(req.body.hints) : req.body.hints) : {};
+      
       const metadata_hints = JSON.stringify({
-        inferred_from_filename: req.body.hints || {},
+        inferred_from_filename: parsedHints, 
         final_confirmed_values: { semester, year, exam_type }
       });
 
+      const textHash = generateTextHash(qText);
+      let embeddingVector;
+
+      const existingCheck = await pool.query(
+        'SELECT embedding FROM questions WHERE text_hash = $1 LIMIT 1', 
+        [textHash]
+      );
+
+      if (existingCheck.rows.length > 0) {
+        embeddingVector = existingCheck.rows[0].embedding;
+        if (typeof embeddingVector !== 'string') embeddingVector = JSON.stringify(embeddingVector);
+      } else {
+        const rawVector = await generateEmbedding(qText);
+        embeddingVector = JSON.stringify(rawVector);
+      }
+
       const qResult = await pool.query(
-        `INSERT INTO questions (paper_id, uploader_id, raw_text, clean_text, metadata_hints)
-         VALUES ($1, $2, $3, $4, $5) RETURNING id, clean_text`,
-        [paper_id, uploader_id, qText, qText, metadata_hints]
+        `INSERT INTO questions (paper_id, uploader_id, raw_text, clean_text, metadata_hints, text_hash, embedding)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, clean_text`,
+        [paper_id, uploader_id, qText, qText, metadata_hints, textHash, embeddingVector] 
       );
       insertedQuestions.push(qResult.rows[0]);
     }
@@ -141,17 +162,33 @@ router.post('/image/confirm', verifyToken, upload.single('image'), async (req, r
     const insertedQuestions = [];
 
     for (const qText of questionsArray) {
-      const parsedHints = typeof req.body.hints === 'string' ? JSON.parse(req.body.hints) : (req.body.hints || {});
+      const parsedHints = req.body.hints ? (typeof req.body.hints === 'string' ? JSON.parse(req.body.hints) : req.body.hints) : {};
 
       const metadata_hints = JSON.stringify({
         inferred_from_filename: parsedHints,
         final_confirmed_values: { semester, year, exam_type }
       });
 
+      const textHash = generateTextHash(qText);
+      let embeddingVector;
+
+      const existingCheck = await pool.query(
+        'SELECT embedding FROM questions WHERE text_hash = $1 LIMIT 1',
+        [textHash]
+      );
+
+      if (existingCheck.rows.length > 0) {
+        embeddingVector = existingCheck.rows[0].embedding;
+        if (typeof embeddingVector !== 'string') embeddingVector = JSON.stringify(embeddingVector);
+      } else {
+        const rawVector = await generateEmbedding(qText);
+        embeddingVector = JSON.stringify(rawVector);
+      }
+
       const qResult = await pool.query(
-        `INSERT INTO questions (paper_id, uploader_id, raw_text, clean_text, image_url, metadata_hints)
-         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, clean_text`,
-        [paper_id, uploader_id, qText, qText, image_url, metadata_hints]
+        `INSERT INTO questions (paper_id, uploader_id, raw_text, clean_text, image_url, metadata_hints, text_hash, embedding)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, clean_text`,
+        [paper_id, uploader_id, qText, qText, image_url, metadata_hints, textHash, embeddingVector]
       );
       insertedQuestions.push(qResult.rows[0]);
     }
