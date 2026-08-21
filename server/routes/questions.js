@@ -7,12 +7,19 @@ import { preprocessImage, runOCR } from '../utils/ocrParser.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
 import { parseFilenameWithLLM } from '../utils/llmFallback.js';
 import { generateEmbedding, generateTextHash, initModel } from '../utils/embeddings.js';
+import rateLimit from 'express-rate-limit';
 
 initModel().catch(console.error);
 
 const router = express.Router();
 
-router.post('/text', verifyToken, async (req, res) => {
+const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 50, 
+  message: { error: 'Too many requests, please try again later.' }
+});
+
+router.post('/text', verifyToken, aiLimiter, async (req, res) => {
   const { text, subject_id, semester, year, exam_type } = req.body;
   const uploader_id = req.user.userId;
 
@@ -127,7 +134,7 @@ router.post('/image', verifyToken, (req, res) => {
   });
 });
 
-router.post('/image/confirm', verifyToken, upload.single('image'), async (req, res) => {
+router.post('/image/confirm', verifyToken, aiLimiter, upload.single('image'), async (req, res) => {
   const { text, subject_id, semester, year, exam_type } = req.body;
   const uploader_id = req.user.userId;
 
@@ -212,6 +219,34 @@ router.post('/parse-filename', verifyToken, async (req, res) => {
   if (!filename) return res.status(400).json({ error: 'Filename required' });
   const hints = await parseFilenameWithLLM(filename);
   res.status(200).json({ hints });
+});
+
+router.get('/:id/duplicates', verifyToken, aiLimiter, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const targetQuery = await pool.query(
+      `SELECT q.embedding, qp.subject_id FROM questions q
+       JOIN question_papers qp ON q.paper_id = qp.id WHERE q.id = $1`, [id]
+    );
+    
+    if (targetQuery.rows.length === 0) return res.status(404).json({ error: 'Question not found' });
+    const { embedding, subject_id } = targetQuery.rows[0];
+
+    const matchQuery = await pool.query(
+      `SELECT q.id, q.clean_text, 1 - (q.embedding <=> $1) AS similarity
+       FROM questions q
+       JOIN question_papers qp ON q.paper_id = qp.id
+       WHERE q.id != $2 AND qp.subject_id = $3 AND 1 - (q.embedding <=> $1) > 0.85
+       ORDER BY similarity DESC LIMIT 5`,
+      [JSON.stringify(embedding), id, subject_id]
+    );
+
+    res.json({ matches: matchQuery.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to find duplicates' });
+  }
 });
 
 export default router;
