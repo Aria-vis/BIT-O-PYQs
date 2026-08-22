@@ -1,4 +1,3 @@
-// 10.2 Text cleanup function
 export function cleanText(text) {
   if (!text) return '';
   return text
@@ -8,9 +7,17 @@ export function cleanText(text) {
 }
 
 export function splitQuestions(text) {
-  const cleanedText = cleanText(text);
-  const splitRegex = /(?=(?:^|\n)\s*(?:Q\.?\s*\d+|\d+)[.)]\s)/gi;
-  const rawSplits = cleanedText.split(splitRegex);
-  
-  return rawSplits.map(q => cleanText(q)).filter(q => q.length > 0);
+  if (!text) return [];
+  const markerRegex = /(?=\n\s*Q[a-z]*\.?\s*\d*\s*\(?[a-z]?\)?)/i;
+
+  let rawSplits;
+  if (markerRegex.test(text)) {
+    rawSplits = text.split(markerRegex);
+  } else {
+    rawSplits = text.split(/\n\s*\n/);
+  }
+
+  return rawSplits
+    .map(q => q.trim())
+    .filter(q => q.length > 10); 
 }

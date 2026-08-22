@@ -26,12 +26,23 @@ export default function UploadText() {
     }
   };
 
-  const cleanText = (text) => text.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
   const previewSplits = () => {
     if (!rawText.trim()) return [];
-    const splitRegex = /(?=(?:^|\n)\s*(?:Q\.?\s*\d+|\d+)[.)]\s)/gi;
-    return cleanText(rawText).split(splitRegex).map(q => cleanText(q)).filter(q => q.length > 0);
+
+    const markerRegex = /(?=\n\s*Q[a-z]*\.?\s*\d*\s*\(?[a-z]?\)?)/i;
+    
+    let rawSplits;
+    if (markerRegex.test(rawText)) {
+      rawSplits = rawText.split(markerRegex);
+    } else {
+      rawSplits = rawText.split(/\n\s*/);
+    }
+
+    return rawSplits
+      .map(q => q.trim())
+      .filter(q => q.length > 10); 
   };
+  
   const splits = previewSplits();
 
   const handleSubmit = async (e) => {
