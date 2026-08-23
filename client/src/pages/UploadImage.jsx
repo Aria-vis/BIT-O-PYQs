@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import HierarchyPicker from '../components/HierarchyPicker';
 import { parseFilename } from '../utils/filenameParser';
+import DuplicateWarning from '../components/DuplicateWarning';
 
 export default function UploadImage() {
+  const [warnings, setWarnings] = useState([]);
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
-
   const [ocrText, setOcrText] = useState('');
   const [confidence, setConfidence] = useState(null);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -116,10 +117,48 @@ export default function UploadImage() {
       if (!res.ok) throw new Error(data.error || 'Failed to save question');
 
       setSuccessData(data);
+      setOcrText('');
+      
+      const newWarnings = [];
+      for (const q of (data.questions || [])) {
+        try {
+          const dupRes = await fetch(`http://localhost:5000/api/questions/${q.id}/duplicates`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const dupData = await dupRes.json();
+          if (dupData.matches && dupData.matches.length > 0) {
+            newWarnings.push({ uploaded: q, matches: dupData.matches });
+          }
+        } catch (err) {
+          console.error('Failed to check for duplicates:', err);
+        }
+      }
+      
+      if (newWarnings.length > 0) {
+        setWarnings(newWarnings);
+      }
+
     } catch (err) {
       setError(err.message);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleKeepDuplicate = (id) => {
+    setWarnings(prev => prev.filter(w => w.uploaded.id !== id));
+  };
+
+  const handleDeleteDuplicate = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`http://localhost:5000/api/questions/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setWarnings(prev => prev.filter(w => w.uploaded.id !== id));
+    } catch (err) {
+      console.error('Failed to delete question', err);
     }
   };
 
@@ -138,6 +177,15 @@ export default function UploadImage() {
             <div className="mt-2"><a href={successData.image_url} target="_blank" rel="noreferrer" className="underline font-bold text-green-900">View uploaded image on Cloudinary</a></div>
           </div>
         )}
+
+        {warnings.map(warning => (
+          <DuplicateWarning 
+            key={warning.uploaded.id} 
+            warning={warning} 
+            onKeep={handleKeepDuplicate} 
+            onDelete={handleDeleteDuplicate} 
+          />
+        ))}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-6">

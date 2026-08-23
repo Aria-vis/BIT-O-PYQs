@@ -14,8 +14,8 @@ initModel().catch(console.error);
 const router = express.Router();
 
 const aiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
-  max: 50, 
+  windowMs: 15 * 60 * 1000,
+  max: 50,
   message: { error: 'Too many requests, please try again later.' }
 });
 
@@ -221,31 +221,51 @@ router.post('/parse-filename', verifyToken, async (req, res) => {
   res.status(200).json({ hints });
 });
 
-router.get('/:id/duplicates', verifyToken, aiLimiter, async (req, res) => {
+router.get('/:id/duplicates', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    
     const targetQuery = await pool.query(
-      `SELECT q.embedding, qp.subject_id FROM questions q
-       JOIN question_papers qp ON q.paper_id = qp.id WHERE q.id = $1`, [id]
+      `SELECT q.embedding, qp.subject_id 
+       FROM questions q
+       JOIN question_papers qp ON q.paper_id = qp.id 
+       WHERE q.id = $1`, 
+      [id]
     );
-    
-    if (targetQuery.rows.length === 0) return res.status(404).json({ error: 'Question not found' });
-    const { embedding, subject_id } = targetQuery.rows[0];
 
+    if (targetQuery.rows.length === 0) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+
+    let { embedding, subject_id } = targetQuery.rows[0];
+
+    const embeddingString = typeof embedding === 'string' ? embedding : JSON.stringify(embedding);
     const matchQuery = await pool.query(
-      `SELECT q.id, q.clean_text, 1 - (q.embedding <=> $1) AS similarity
+      `SELECT q.id, q.clean_text, 1 - (q.embedding <=> $1::vector) AS similarity
        FROM questions q
        JOIN question_papers qp ON q.paper_id = qp.id
-       WHERE q.id != $2 AND qp.subject_id = $3 AND 1 - (q.embedding <=> $1) > 0.85
-       ORDER BY similarity DESC LIMIT 5`,
-      [JSON.stringify(embedding), id, subject_id]
+       WHERE q.id != $2 
+       AND qp.subject_id = $3 
+       AND 1 - (q.embedding <=> $1::vector) > 0.70
+       ORDER BY similarity DESC 
+       LIMIT 5`,
+      [embeddingString, id, subject_id]
     );
 
     res.json({ matches: matchQuery.rows });
   } catch (err) {
+    console.error('Duplicate search crash:', err);
+    res.status(500).json({ error: 'Failed to search for duplicates' });
+  }
+});
+
+router.delete('/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM questions WHERE id = $1', [id]);
+    res.json({ message: 'Question deleted successfully' });
+  } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to find duplicates' });
+    res.status(500).json({ error: 'Failed to delete question' });
   }
 });
 

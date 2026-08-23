@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import HierarchyPicker from '../components/HierarchyPicker';
 import { parseFilename } from '../utils/filenameParser';
+import DuplicateWarning from '../components/DuplicateWarning';
 
 export default function UploadText() {
+  const [warnings, setWarnings] = useState([]);
   const [selectedUniversity, setSelectedUniversity] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
@@ -76,12 +78,50 @@ export default function UploadText() {
 
       setSuccessData(data);
       setRawText('');
+
+      const newWarnings = [];
+      for (const q of (data.questions || [])) {
+        try {
+          const dupRes = await fetch(`http://localhost:5000/api/questions/${q.id}/duplicates`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const dupData = await dupRes.json();
+          if (dupData.matches && dupData.matches.length > 0) {
+            newWarnings.push({ uploaded: q, matches: dupData.matches });
+          }
+        } catch (err) {
+          console.error('Failed to check for duplicates:', err);
+        }
+      }
+      
+      if (newWarnings.length > 0) {
+        setWarnings(newWarnings);
+      }
+
     } catch (err) {
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleKeepDuplicate = (id) => {
+    setWarnings(prev => prev.filter(w => w.uploaded.id !== id));
+  };
+
+  const handleDeleteDuplicate = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`http://localhost:5000/api/questions/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setWarnings(prev => prev.filter(w => w.uploaded.id !== id));
+    } catch (err) {
+      console.error('Failed to delete question', err);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -99,6 +139,15 @@ export default function UploadText() {
             </div>
           </div>
         )}
+
+        {warnings.map(warning => (
+          <DuplicateWarning 
+            key={warning.uploaded.id} 
+            warning={warning} 
+            onKeep={handleKeepDuplicate} 
+            onDelete={handleDeleteDuplicate} 
+          />
+        ))}
 
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded text-red-800">
