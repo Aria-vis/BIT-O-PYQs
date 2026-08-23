@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import UploadText from './pages/UploadText';
 import UploadImage from './pages/UploadImage';
+import Browse from './pages/Browse';
 
 function App() {
   return (
@@ -36,13 +37,23 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
         {/* Protected Route */}
-        <Route 
-          path="/upload-image" 
+        <Route
+          path="/upload-image"
           element={
             <ProtectedRoute>
               <UploadImage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Route */}
+        <Route
+          path="/browse"
+          element={
+            <ProtectedRoute>
+              <Browse />
             </ProtectedRoute>
           }
         />

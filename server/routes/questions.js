@@ -269,4 +269,72 @@ router.delete('/:id', verifyToken, async (req, res) => {
   }
 });
 
+router.get('/', async (req, res) => {
+  try {
+    const { university_id, course_id, subject_id, year, search, page = 1, limit = 10 } = req.query;
+    const offset = (page - 1) * limit;
+
+    let queryParams = [];
+    let whereClauses = [];
+    let paramIndex = 1;
+
+    let baseQuery = `
+      FROM questions q
+      JOIN question_papers qp ON q.paper_id = qp.id
+      JOIN subjects s ON qp.subject_id = s.id
+      JOIN courses c ON s.course_id = c.id
+      WHERE 1=1
+    `;
+
+    if (university_id) {
+      whereClauses.push(`c.university_id = $${paramIndex++}`);
+      queryParams.push(university_id);
+    }
+    if (course_id) {
+      whereClauses.push(`s.course_id = $${paramIndex++}`);
+      queryParams.push(course_id);
+    }
+    if (subject_id) {
+      whereClauses.push(`qp.subject_id = $${paramIndex++}`);
+      queryParams.push(subject_id);
+    }
+    if (year) {
+      whereClauses.push(`qp.year = $${paramIndex++}`);
+      queryParams.push(year);
+    }
+    if (search) {
+      whereClauses.push(`q.clean_text ILIKE $${paramIndex++}`);
+      queryParams.push(`%${search}%`);
+    }
+
+    const whereString = whereClauses.length > 0 ? ' AND ' + whereClauses.join(' AND ') : '';
+
+    const countQuery = `SELECT COUNT(*) ${baseQuery} ${whereString}`;
+    const totalRes = await pool.query(countQuery, queryParams);
+    const totalQuestions = parseInt(totalRes.rows[0].count);
+
+    const dataQuery = `
+      SELECT q.id, q.clean_text, q.image_url, qp.semester, qp.year, qp.exam_type, s.name as subject_name
+      ${baseQuery} ${whereString}
+      ORDER BY q.created_at DESC
+      LIMIT $${paramIndex++} OFFSET $${paramIndex++}
+    `;
+    
+    queryParams.push(limit, offset);
+    
+    const { rows } = await pool.query(dataQuery, queryParams);
+
+    res.json({
+      questions: rows,
+      totalPages: Math.ceil(totalQuestions / limit),
+      currentPage: parseInt(page),
+      totalQuestions
+    });
+
+  } catch (err) {
+    console.error('Error fetching questions:', err);
+    res.status(500).json({ error: 'Failed to fetch questions' });
+  }
+});
+
 export default router;

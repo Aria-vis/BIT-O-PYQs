@@ -35,11 +35,11 @@ export default function Dashboard() {
             <p className="text-sm text-gray-600">Snap a photo and let our AI read the text.</p>
           </Link>
 
-          <div className="block bg-gray-50 p-6 rounded-xl border border-gray-200 text-center opacity-60">
-            <div className="text-4xl mb-3">🔍</div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Search PYQs</h2>
-            <p className="text-sm text-gray-600">Coming later in the roadmap.</p>
-          </div>
+          <Link to="/browse" className="block bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition text-center group">
+            <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">🔍</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Search PYQs</h2>
+            <p className="text-gray-500">Browse and filter the question bank.</p>
+          </Link>
         </div>
       </div>
     </div>
