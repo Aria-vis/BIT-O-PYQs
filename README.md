@@ -21,6 +21,11 @@ This project uses Neon PostgreSQL with `pgvector` for local embedding storage.
 3. Run the schema creation commands from the `Day 4` roadmap outline.
 4. Add the Neon connection string to the server's `.env` file as `DATABASE_URL`.
 
+## Known Limitations (Tier 1 MVP)
+
+* **Duplicate Dismissals:** Duplicate dismissals are session-only and not persisted between page loads.
+* **OCR Alignment:** For best OCR accuracy, photograph question papers as squarely/flat as possible.
+
 ## 📁 Repository Structure
 
 ```text

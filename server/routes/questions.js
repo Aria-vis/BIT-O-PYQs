@@ -9,6 +9,8 @@ import { parseFilenameWithLLM } from '../utils/llmFallback.js';
 import { generateEmbedding, generateTextHash, initModel } from '../utils/embeddings.js';
 import rateLimit from 'express-rate-limit';
 
+const SIMILARITY_THRESHOLD = 0.85;
+
 initModel().catch(console.error);
 
 const router = express.Router();
@@ -245,10 +247,10 @@ router.get('/:id/duplicates', verifyToken, async (req, res) => {
        JOIN question_papers qp ON q.paper_id = qp.id
        WHERE q.id != $2 
        AND qp.subject_id = $3 
-       AND 1 - (q.embedding <=> $1::vector) > 0.70
+       AND 1 - (q.embedding <=> $1::vector) > $4
        ORDER BY similarity DESC 
        LIMIT 5`,
-      [embeddingString, id, subject_id]
+      [embeddingString, id, subject_id, SIMILARITY_THRESHOLD]
     );
 
     res.json({ matches: matchQuery.rows });

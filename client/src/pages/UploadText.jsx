@@ -19,12 +19,37 @@ export default function UploadText() {
   const [error, setError] = useState('');
   const [successData, setSuccessData] = useState(null);
 
-  const handleFilenameBlur = () => {
+  const handleFilenameBlur = async () => {
+    if (!filenameInput.trim()) return;
+
     const { guesses, confidence } = parseFilename(filenameInput);
-    if (confidence > 0) {
-      if (guesses.semester && !semester) setSemester(guesses.semester);
-      if (guesses.year && !year) setYear(guesses.year);
-      if (guesses.examType && !examType) setExamType(guesses.examType);
+
+    if (guesses.semester && !semester) setSemester(guesses.semester);
+    if (guesses.year && !year) setYear(guesses.year);
+    if (guesses.examType && !examType) setExamType(guesses.examType);
+
+    if (confidence < 50) {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:5000/api/questions/parse-filename', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ filename: filenameInput })
+        });
+
+        const data = await res.json();
+
+        if (data.hints) {
+          if (data.hints.semester && !semester) setSemester(data.hints.semester);
+          if (data.hints.year && !year) setYear(data.hints.year);
+          if (data.hints.examType && !examType) setExamType(data.hints.examType);
+        }
+      } catch (error) {
+        console.error("Failed to fetch filename hints from AI:", error);
+      }
     }
   };
 
@@ -32,7 +57,7 @@ export default function UploadText() {
     if (!rawText.trim()) return [];
 
     const markerRegex = /(?=\n\s*Q[a-z]*\.?\s*\d*\s*\(?[a-z]?\)?)/i;
-    
+
     let rawSplits;
     if (markerRegex.test(rawText)) {
       rawSplits = rawText.split(markerRegex);
@@ -42,9 +67,9 @@ export default function UploadText() {
 
     return rawSplits
       .map(q => q.trim())
-      .filter(q => q.length > 10); 
+      .filter(q => q.length > 10);
   };
-  
+
   const splits = previewSplits();
 
   const handleSubmit = async (e) => {
@@ -93,7 +118,7 @@ export default function UploadText() {
           console.error('Failed to check for duplicates:', err);
         }
       }
-      
+
       if (newWarnings.length > 0) {
         setWarnings(newWarnings);
       }
@@ -141,11 +166,11 @@ export default function UploadText() {
         )}
 
         {warnings.map(warning => (
-          <DuplicateWarning 
-            key={warning.uploaded.id} 
-            warning={warning} 
-            onKeep={handleKeepDuplicate} 
-            onDelete={handleDeleteDuplicate} 
+          <DuplicateWarning
+            key={warning.uploaded.id}
+            warning={warning}
+            onKeep={handleKeepDuplicate}
+            onDelete={handleDeleteDuplicate}
           />
         ))}
 
