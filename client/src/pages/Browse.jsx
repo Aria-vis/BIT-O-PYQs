@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import HierarchyPicker from '../components/HierarchyPicker';
+import Spinner from '../components/Spinner';
+import EmptyState from '../components/EmptyState';
 
 export default function Browse() {
   const [selectedUniversity, setSelectedUniversity] = useState('');
@@ -30,7 +32,7 @@ export default function Browse() {
         const res = await fetch(`http://localhost:5000/api/questions?${params.toString()}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         const data = await res.json();
         setQuestions(data.questions || []);
         setTotalPages(data.totalPages || 1);
@@ -51,24 +53,24 @@ export default function Browse() {
   }, [selectedUniversity, selectedCourse, selectedSubject, year, search]);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex justify-between items-center bg-white p-6 rounded-lg shadow-sm">
+        <div className="flex justify-between items-center bg-white p-4 md:p-6 rounded-lg shadow-sm">
           <h1 className="text-3xl font-bold text-gray-800">Browse Questions</h1>
           <Link to="/dashboard" className="text-blue-600 hover:underline font-medium">← Dashboard</Link>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="mb-6">
-            <input 
-              type="text" 
-              placeholder="Search by keyword (e.g., 'Linked Lists')..." 
+            <input
+              type="text"
+              placeholder="Search by keyword (e.g., 'Linked Lists')..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full border-2 border-blue-100 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div className="md:col-span-3">
               <HierarchyPicker
@@ -79,27 +81,29 @@ export default function Browse() {
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-              <input 
-                type="number" 
-                placeholder="e.g. 2024" 
-                value={year} 
-                onChange={(e) => setYear(e.target.value)} 
+              <input
+                type="number"
+                placeholder="e.g. 2024"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
                 className="w-full border rounded p-2"
               />
             </div>
           </div>
         </div>
 
-        {/* Results Section */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <h2 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2">
             Results ({totalQuestions} found)
           </h2>
-          
+
           {isLoading ? (
-            <div className="text-center py-10 text-gray-500 animate-pulse">Searching library...</div>
+            <Spinner text="Searching question bank..." />
           ) : questions.length === 0 ? (
-            <div className="text-center py-10 text-gray-500">No questions match your current filters.</div>
+            <EmptyState
+              title="No questions found"
+              message="Try adjusting your filters or search for a different keyword."
+            />
           ) : (
             <div className="space-y-6">
               {questions.map((q) => (
@@ -113,7 +117,7 @@ export default function Browse() {
                     </span>
                   </div>
                   <p className="text-gray-800 whitespace-pre-wrap font-medium">{q.clean_text}</p>
-                  
+
                   {q.image_url && (
                     <div className="mt-4">
                       <a href={q.image_url} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline flex items-center">
@@ -128,7 +132,7 @@ export default function Browse() {
 
           {totalPages > 1 && (
             <div className="flex justify-between items-center mt-8 pt-4 border-t">
-              <button 
+              <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
                 className="px-4 py-2 bg-gray-100 rounded disabled:opacity-50 hover:bg-gray-200"
@@ -138,7 +142,7 @@ export default function Browse() {
               <span className="text-sm text-gray-600 font-medium">
                 Page {page} of {totalPages}
               </span>
-              <button 
+              <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 className="px-4 py-2 bg-gray-100 rounded disabled:opacity-50 hover:bg-gray-200"

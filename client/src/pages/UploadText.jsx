@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import HierarchyPicker from '../components/HierarchyPicker';
 import { parseFilename } from '../utils/filenameParser';
 import DuplicateWarning from '../components/DuplicateWarning';
+import Spinner from '../components/Spinner';
 
 export default function UploadText() {
   const [warnings, setWarnings] = useState([]);
@@ -149,8 +150,8 @@ export default function UploadText() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-4 md:p-6">
         <div className="flex justify-between items-center mb-6 border-b pb-4">
           <h1 className="text-3xl font-bold text-gray-800">Upload Raw Text</h1>
           <Link to="/dashboard" className="text-blue-600 hover:underline font-medium">← Back to Dashboard</Link>
@@ -251,13 +252,18 @@ export default function UploadText() {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 text-lg transition shadow-md"
-          >
-            {isLoading ? 'Processing & Saving...' : 'Upload Questions'}
-          </button>
+          <div className="mt-8">
+            {isLoading ? (
+              <Spinner text="Processing and vectorizing questions..." />
+            ) : (
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition shadow-sm"
+              >
+                Upload and Process Text
+              </button>
+            )}
+          </div>
         </form>
       </div>
     </div>

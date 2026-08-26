@@ -22,7 +22,7 @@ export default function Dashboard() {
           Welcome to the VIP area! Choose an action below to get started.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Link to="/upload-text" className="block bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition text-center hover:border-blue-300">
             <div className="text-4xl mb-3">📄</div>
             <h2 className="text-xl font-bold text-gray-800 mb-2">Upload Text</h2>

@@ -118,7 +118,7 @@ export default function UploadImage() {
 
       setSuccessData(data);
       setOcrText('');
-      
+
       const newWarnings = [];
       for (const q of (data.questions || [])) {
         try {
@@ -133,7 +133,7 @@ export default function UploadImage() {
           console.error('Failed to check for duplicates:', err);
         }
       }
-      
+
       if (newWarnings.length > 0) {
         setWarnings(newWarnings);
       }
@@ -179,11 +179,11 @@ export default function UploadImage() {
         )}
 
         {warnings.map(warning => (
-          <DuplicateWarning 
-            key={warning.uploaded.id} 
-            warning={warning} 
-            onKeep={handleKeepDuplicate} 
-            onDelete={handleDeleteDuplicate} 
+          <DuplicateWarning
+            key={warning.uploaded.id}
+            warning={warning}
+            onKeep={handleKeepDuplicate}
+            onDelete={handleDeleteDuplicate}
           />
         ))}
 
@@ -228,10 +228,18 @@ export default function UploadImage() {
                   <option value="">Type</option><option value="Midterm">Midterm</option><option value="Final">Final</option>
                 </select>
               </div>
-
-              <button onClick={handleSubmit} disabled={isUploading} className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded hover:bg-blue-700 disabled:bg-blue-400">
-                {isUploading ? 'Uploading to Cloudinary...' : 'Confirm & Save'}
-              </button>
+              <div className="mt-8">
+                {isLoading ? (
+                  <Spinner text="Running OCR and analyzing image..." />
+                ) : (
+                  <button
+                    type="submit"
+                    className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition shadow-sm"
+                  >
+                    Confirm and Upload
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
