@@ -1,7 +1,7 @@
 import express from 'express';
 import pool from '../db.js';
 import verifyToken from '../middleware/authMiddleware.js';
-import { splitQuestions } from '../utils/textParser.js';
+import { splitQuestions, cleanText } from '../utils/textParser.js';
 import upload from '../middleware/uploadMiddleware.js';
 import { preprocessImage, runOCR } from '../utils/ocrParser.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
@@ -54,6 +54,7 @@ router.post('/text', verifyToken, aiLimiter, async (req, res) => {
     const insertedQuestions = [];
 
     for (const qText of questionsArray) {
+      const clean = cleanText(qText);
       const parsedHints = req.body.hints ? (typeof req.body.hints === 'string' ? JSON.parse(req.body.hints) : req.body.hints) : {};
       
       const metadata_hints = JSON.stringify({
@@ -80,7 +81,7 @@ router.post('/text', verifyToken, aiLimiter, async (req, res) => {
       const qResult = await pool.query(
         `INSERT INTO questions (paper_id, uploader_id, raw_text, clean_text, metadata_hints, text_hash, embedding)
          VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, clean_text`,
-        [paper_id, uploader_id, qText, qText, metadata_hints, textHash, embeddingVector] 
+        [paper_id, uploader_id, qText, clean, metadata_hints, textHash, embeddingVector] 
       );
       insertedQuestions.push(qResult.rows[0]);
     }
@@ -171,6 +172,7 @@ router.post('/image/confirm', verifyToken, aiLimiter, upload.single('image'), as
     const insertedQuestions = [];
 
     for (const qText of questionsArray) {
+      const clean = cleanText(qText);
       const parsedHints = req.body.hints ? (typeof req.body.hints === 'string' ? JSON.parse(req.body.hints) : req.body.hints) : {};
 
       const metadata_hints = JSON.stringify({
@@ -197,7 +199,7 @@ router.post('/image/confirm', verifyToken, aiLimiter, upload.single('image'), as
       const qResult = await pool.query(
         `INSERT INTO questions (paper_id, uploader_id, raw_text, clean_text, image_url, metadata_hints, text_hash, embedding)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, clean_text`,
-        [paper_id, uploader_id, qText, qText, image_url, metadata_hints, textHash, embeddingVector]
+        [paper_id, uploader_id, qText, clean, image_url, metadata_hints, textHash, embeddingVector]
       );
       insertedQuestions.push(qResult.rows[0]);
     }
@@ -271,7 +273,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, async (req, res) => {
   try {
     const { university_id, course_id, subject_id, year, search, page = 1, limit = 10 } = req.query;
     const offset = (page - 1) * limit;

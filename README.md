@@ -31,5 +31,4 @@ This project uses Neon PostgreSQL with `pgvector` for local embedding storage.
 ```text
 bito-pyqs/
 ├── client/    # React + Vite frontend
-├── server/    # Express REST API & local AI execution
-└── docs/      # System architecture & deployment docs
+└── server/    # Express REST API & local AI execution

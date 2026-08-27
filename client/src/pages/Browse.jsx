@@ -67,7 +67,7 @@ export default function Browse() {
               placeholder="Search by keyword (e.g., 'Linked Lists')..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full border-2 border-blue-100 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -86,7 +86,7 @@ export default function Browse() {
                 placeholder="e.g. 2024"
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
-                className="w-full border rounded p-2"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>

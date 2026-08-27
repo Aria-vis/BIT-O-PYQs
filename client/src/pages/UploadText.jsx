@@ -198,7 +198,7 @@ export default function UploadText() {
                 value={filenameInput}
                 onChange={(e) => setFilenameInput(e.target.value)}
                 onBlur={handleFilenameBlur}
-                className="w-full border rounded p-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="text-xs text-gray-500 mt-1">Paste your file's name here and click away to automatically fill the details below.</p>
             </div>
@@ -214,7 +214,7 @@ export default function UploadText() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Exam Type</label>
-                <select value={examType} onChange={(e) => setExamType(e.target.value)} className="w-full border rounded p-2">
+                <select value={examType} onChange={(e) => setExamType(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="">-- Select --</option>
                   <option value="Midterm">Midterm</option>
                   <option value="Final">Final</option>

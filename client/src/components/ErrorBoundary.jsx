@@ -24,17 +24,17 @@ class ErrorBoundary extends React.Component {
           <p className="text-gray-500 max-w-md mb-8">
             We've caught an unexpected application error. Don't worry, your data is safe.
           </p>
-          <a 
-            href="/dashboard" 
+          <Link
+            to="/dashboard"
             className="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm"
           >
             Return to Dashboard
-          </a>
+          </Link>
         </div>
       );
     }
 
-    return this.props.children; 
+    return this.props.children;
   }
 }
 

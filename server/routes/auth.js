@@ -77,7 +77,7 @@ router.post('/login', async (req, res) => {
 
 router.get('/profile', verifyToken, (req, res) => {
   res.status(200).json({
-    message: 'You have successfully accessed the VIP area!',
+    message: 'Welcome back to your dashboard',
     userId: req.user.userId
   });
 });

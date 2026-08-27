@@ -19,7 +19,7 @@ export default function Dashboard() {
         </div>
 
         <p className="text-gray-600 mb-6">
-          Welcome to the VIP area! Choose an action below to get started.
+          Welcome back to your dashboard.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -35,10 +35,10 @@ export default function Dashboard() {
             <p className="text-sm text-gray-600">Snap a photo and let our AI read the text.</p>
           </Link>
 
-          <Link to="/browse" className="block bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition text-center group">
-            <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">🔍</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Search PYQs</h2>
-            <p className="text-gray-500">Browse and filter the question bank.</p>
+          <Link to="/browse" className="block bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition text-center hover:border-blue-300">
+            <div className="text-4xl mb-3">🔍</div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Search PYQs</h2>
+            <p className="text-gray-600">Browse and filter the question bank.</p>
           </Link>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import HierarchyPicker from '../components/HierarchyPicker';
 import { parseFilename } from '../utils/filenameParser';
 import DuplicateWarning from '../components/DuplicateWarning';
+import Spinner from '../components/Spinner';
 
 export default function UploadImage() {
   const [warnings, setWarnings] = useState([]);
@@ -11,14 +12,12 @@ export default function UploadImage() {
   const [ocrText, setOcrText] = useState('');
   const [confidence, setConfidence] = useState(null);
   const [isExtracting, setIsExtracting] = useState(false);
-
   const [selectedUniversity, setSelectedUniversity] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [semester, setSemester] = useState('');
   const [year, setYear] = useState('');
   const [examType, setExamType] = useState('');
-
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
   const [successData, setSuccessData] = useState(null);
@@ -190,7 +189,7 @@ export default function UploadImage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-6">
             <div className="bg-gray-50 p-6 rounded border border-gray-200 border-dashed text-center">
-              <input type="file" accept="image/jpeg, image/png, image/webp" onChange={handleFileChange} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+              <input type="file" accept="image/jpeg, image/png, image/webp" onChange={handleFileChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
               {previewUrl && <img src={previewUrl} alt="Preview" className="mt-4 max-h-64 mx-auto rounded shadow-sm" />}
               {file && !ocrText && (
                 <button onClick={handleExtractText} disabled={isExtracting} className="mt-4 bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900 disabled:bg-gray-400">
@@ -209,7 +208,7 @@ export default function UploadImage() {
           </div>
 
           {ocrText && (
-            <div className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="bg-blue-50 p-4 rounded border border-blue-100">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="font-bold text-blue-900">Review & Edit OCR Text</h3>
@@ -222,14 +221,14 @@ export default function UploadImage() {
               </div>
 
               <div className="grid grid-cols-3 gap-2">
-                <input type="number" placeholder="Sem" value={semester} onChange={(e) => setSemester(e.target.value)} className="border p-2 rounded text-sm" />
-                <input type="number" placeholder="Year" value={year} onChange={(e) => setYear(e.target.value)} className="border p-2 rounded text-sm" />
-                <select value={examType} onChange={(e) => setExamType(e.target.value)} className="border p-2 rounded text-sm">
+                <input type="number" placeholder="Sem" value={semester} onChange={(e) => setSemester(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="number" placeholder="Year" value={year} onChange={(e) => setYear(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <select value={examType} onChange={(e) => setExamType(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="">Type</option><option value="Midterm">Midterm</option><option value="Final">Final</option>
                 </select>
               </div>
               <div className="mt-8">
-                {isLoading ? (
+                {isUploading ? (
                   <Spinner text="Running OCR and analyzing image..." />
                 ) : (
                   <button
@@ -240,7 +239,7 @@ export default function UploadImage() {
                   </button>
                 )}
               </div>
-            </div>
+            </form>
           )}
         </div>
       </div>
