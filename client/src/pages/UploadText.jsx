@@ -32,7 +32,7 @@ export default function UploadText() {
     if (confidence < 50) {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:5000/api/questions/parse-filename', {
+        const res = await fetch(import.meta.env.VITE_API_URL + '/api/questions/parse-filename', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ export default function UploadText() {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/questions/text', {
+      const res = await fetch(import.meta.env.VITE_API_URL + '/api/questions/text', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

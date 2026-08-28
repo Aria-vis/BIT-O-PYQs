@@ -39,7 +39,7 @@ export default function UploadImage() {
     } else {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:5000/api/questions/parse-filename', {
+        const res = await fetch(import.meta.env.VITE_API_URL + '/api/questions/parse-filename', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ export default function UploadImage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/questions/image', {
+      const res = await fetch(import.meta.env.VITE_API_URL + '/api/questions/image', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
@@ -106,7 +106,7 @@ export default function UploadImage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/questions/image/confirm', {
+      const res = await fetch(import.meta.env.VITE_API_URL + '/api/questions/image/confirm', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
