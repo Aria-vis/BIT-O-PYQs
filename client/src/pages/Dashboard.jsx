@@ -38,7 +38,7 @@ export default function Dashboard() {
           <Link to="/browse" className="block bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition text-center hover:border-blue-300">
             <div className="text-4xl mb-3">🔍</div>
             <h2 className="text-xl font-bold text-gray-800 mb-2">Search PYQs</h2>
-            <p className="text-gray-600">Browse and filter the question bank.</p>
+            <p className="text-sm text-gray-600">Browse and filter the question bank.</p>
           </Link>
         </div>
       </div>

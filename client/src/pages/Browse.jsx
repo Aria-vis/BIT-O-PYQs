@@ -29,7 +29,7 @@ export default function Browse() {
         if (search) params.append('search', search);
 
         const token = localStorage.getItem('token');
-        const res = await fetch(`http://localhost:5000/api/questions?${params.toString()}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions?${params.toString()}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 

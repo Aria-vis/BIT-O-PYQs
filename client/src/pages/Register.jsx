@@ -16,7 +16,7 @@ export default function Register() {
     setError('');
 
     try {
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/auth/signup', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
@@ -75,7 +75,7 @@ export default function Register() {
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition"
+            className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition"
           >
             Register
           </button>

@@ -32,7 +32,7 @@ export default function UploadText() {
     if (confidence < 50) {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(import.meta.env.VITE_API_URL + '/api/questions/parse-filename', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/parse-filename`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ export default function UploadText() {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(import.meta.env.VITE_API_URL + '/api/questions/text', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/text`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +108,7 @@ export default function UploadText() {
       const newWarnings = [];
       for (const q of (data.questions || [])) {
         try {
-          const dupRes = await fetch(`http://localhost:5000/api/questions/${q.id}/duplicates`, {
+          const dupRes = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/${q.id}/duplicates`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           const dupData = await dupRes.json();
@@ -138,7 +138,7 @@ export default function UploadText() {
   const handleDeleteDuplicate = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`http://localhost:5000/api/questions/${id}`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/questions/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -147,7 +147,6 @@ export default function UploadText() {
       console.error('Failed to delete question', err);
     }
   };
-
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
@@ -206,11 +205,11 @@ export default function UploadText() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>
-                <input type="number" placeholder="e.g. 5" value={semester} onChange={(e) => setSemester(e.target.value)} className="w-full border rounded p-2" />
+                <input type="number" placeholder="e.g. 5" value={semester} onChange={(e) => setSemester(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-                <input type="number" placeholder="e.g. 2023" value={year} onChange={(e) => setYear(e.target.value)} className="w-full border rounded p-2" />
+                <input type="number" placeholder="e.g. 2023" value={year} onChange={(e) => setYear(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Exam Type</label>

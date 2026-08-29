@@ -39,7 +39,7 @@ export default function UploadImage() {
     } else {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(import.meta.env.VITE_API_URL + '/api/questions/parse-filename', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/parse-filename`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ export default function UploadImage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(import.meta.env.VITE_API_URL + '/api/questions/image', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/image`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
@@ -106,7 +106,7 @@ export default function UploadImage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(import.meta.env.VITE_API_URL + '/api/questions/image/confirm', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/image/confirm`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
@@ -121,7 +121,7 @@ export default function UploadImage() {
       const newWarnings = [];
       for (const q of (data.questions || [])) {
         try {
-          const dupRes = await fetch(`http://localhost:5000/api/questions/${q.id}/duplicates`, {
+          const dupRes = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/${q.id}/duplicates`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           const dupData = await dupRes.json();
@@ -151,7 +151,7 @@ export default function UploadImage() {
   const handleDeleteDuplicate = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`http://localhost:5000/api/questions/${id}`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/questions/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

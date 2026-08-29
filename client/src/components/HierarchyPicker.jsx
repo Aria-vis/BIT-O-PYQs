@@ -27,7 +27,7 @@ export default function HierarchyPicker({
   const { data: universities, isLoading: isLoadingUnivs } = useQuery({
     queryKey: ['universities'],
     queryFn: async () => {
-      const res = await fetch(import.meta.env.VITE_API_URL + '/api/hierarchy/universities');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/hierarchy/universities`);
       if (!res.ok) throw new Error('Network error');
       return res.json();
     },
@@ -37,7 +37,7 @@ export default function HierarchyPicker({
   const { data: courses, isLoading: isLoadingCourses } = useQuery({
     queryKey: ['courses', selectedUniversity],
     queryFn: async () => {
-      const res = await fetch(`http://localhost:5000/api/hierarchy/courses?university_id=${selectedUniversity}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/hierarchy/courses?university_id=${selectedUniversity}`);
       if (!res.ok) throw new Error('Network error');
       return res.json();
     },
@@ -48,7 +48,7 @@ export default function HierarchyPicker({
   const { data: subjects, isLoading: isLoadingSubjects } = useQuery({
     queryKey: ['subjects', selectedCourse],
     queryFn: async () => {
-      const res = await fetch(`http://localhost:5000/api/hierarchy/subjects?course_id=${selectedCourse}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/hierarchy/subjects?course_id=${selectedCourse}`);
       if (!res.ok) throw new Error('Network error');
       return res.json();
     },
@@ -58,7 +58,7 @@ export default function HierarchyPicker({
 
   const addUnivMutation = useMutation({
     mutationFn: async (newUniv) => {
-      const res = await fetch(import.meta.env.VITE_API_URL + '/api/hierarchy/universities', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/hierarchy/universities`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(newUniv),
@@ -68,9 +68,9 @@ export default function HierarchyPicker({
       return data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['universities'] }); // Refresh list
-      setSelectedUniversity(data.id); // Auto-select
-      setIsAddingUniv(false); // Close form
+      queryClient.invalidateQueries({ queryKey: ['universities'] });
+      setSelectedUniversity(data.id);
+      setIsAddingUniv(false);
       setNewUnivName(''); setNewUnivCode(''); setUnivError('');
     },
     onError: (err) => setUnivError(err.message)
@@ -78,7 +78,7 @@ export default function HierarchyPicker({
 
   const addCourseMutation = useMutation({
     mutationFn: async (newCourse) => {
-      const res = await fetch(import.meta.env.VITE_API_URL + '/api/hierarchy/courses', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/hierarchy/courses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ ...newCourse, university_id: selectedUniversity }),
@@ -98,7 +98,7 @@ export default function HierarchyPicker({
 
   const addSubjectMutation = useMutation({
     mutationFn: async (newSubject) => {
-      const res = await fetch(import.meta.env.VITE_API_URL + '/api/hierarchy/subjects', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/hierarchy/subjects`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ ...newSubject, course_id: selectedCourse }),
