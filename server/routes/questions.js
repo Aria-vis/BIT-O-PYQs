@@ -52,6 +52,7 @@ router.post('/text', verifyToken, aiLimiter, async (req, res) => {
 
     const questionsArray = splitQuestions(text);
     const insertedQuestions = [];
+    const skippedQuestions = [];
 
     for (const qText of questionsArray) {
       const clean = cleanText(qText);
@@ -63,33 +64,81 @@ router.post('/text', verifyToken, aiLimiter, async (req, res) => {
       });
 
       const textHash = generateTextHash(qText);
-      let embeddingVector;
+      let embeddingVector = null;
+      let skip = false;
+      let skipReason = '';
+      let totalMatches = 0;
+      let topMatches = [];
 
-      const existingCheck = await pool.query(
-        'SELECT embedding FROM questions WHERE text_hash = $1 LIMIT 1', 
-        [textHash]
+      const hashCheck = await pool.query(
+        `SELECT q.paper_id, q.embedding FROM questions q
+         JOIN question_papers qp ON q.paper_id = qp.id
+         WHERE q.text_hash = $1 AND qp.subject_id = $2 LIMIT 1`,
+        [textHash, subject_id]
       );
 
-      if (existingCheck.rows.length > 0) {
-        embeddingVector = existingCheck.rows[0].embedding;
-        if (typeof embeddingVector !== 'string') embeddingVector = JSON.stringify(embeddingVector);
-      } else {
-        const rawVector = await generateEmbedding(qText);
-        embeddingVector = JSON.stringify(rawVector);
+      if (hashCheck.rows.length > 0) {
+        if (hashCheck.rows[0].paper_id === paper_id) {
+          skip = true;
+          skipReason = 'Exact text already exists in this paper.';
+        } else {
+          embeddingVector = hashCheck.rows[0].embedding;
+          if (typeof embeddingVector !== 'string') embeddingVector = JSON.stringify(embeddingVector);
+        }
       }
 
-      const qResult = await pool.query(
-        `INSERT INTO questions (paper_id, uploader_id, raw_text, clean_text, metadata_hints, text_hash, embedding)
-         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, clean_text`,
-        [paper_id, uploader_id, qText, clean, metadata_hints, textHash, embeddingVector] 
-      );
-      insertedQuestions.push(qResult.rows[0]);
+      if (!skip) {
+        if (!embeddingVector) {
+          const rawVector = await generateEmbedding(qText);
+          embeddingVector = JSON.stringify(rawVector);
+        }
+
+        const simCheck = await pool.query(
+          `SELECT q.paper_id, q.clean_text, 1 - (q.embedding <=> $1::vector) AS similarity
+           FROM questions q
+           JOIN question_papers qp ON q.paper_id = qp.id
+           WHERE qp.subject_id = $2 AND 1 - (q.embedding <=> $1::vector) > $3
+           ORDER BY similarity DESC LIMIT 5`,
+          [embeddingVector, subject_id, SIMILARITY_THRESHOLD]
+        );
+
+        if (simCheck.rows.length > 0) {
+          if (simCheck.rows[0].paper_id === paper_id) {
+            skip = true;
+            skipReason = 'Very similar question already exists in this paper.';
+          } else {
+            const trueCountCheck = await pool.query(
+              `SELECT COUNT(*) FROM questions q
+               JOIN question_papers qp ON q.paper_id = qp.id
+               WHERE qp.subject_id = $1 AND 1 - (q.embedding <=> $2::vector) > $3`,
+              [subject_id, embeddingVector, SIMILARITY_THRESHOLD]
+            );
+            totalMatches = parseInt(trueCountCheck.rows[0].count, 10);
+            topMatches = simCheck.rows.slice(0, 3).map(m => ({ text: m.clean_text, similarity: m.similarity }));
+          }
+        }
+      }
+
+      if (skip) {
+        skippedQuestions.push({ text: clean, reason: skipReason });
+      } else {
+        const qResult = await pool.query(
+          `INSERT INTO questions (paper_id, uploader_id, raw_text, clean_text, metadata_hints, text_hash, embedding)
+           VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, clean_text`,
+          [paper_id, uploader_id, qText, clean, metadata_hints, textHash, embeddingVector] 
+        );
+        insertedQuestions.push({ ...qResult.rows[0], totalMatches, topMatches });
+      }
     }
 
     await pool.query('COMMIT');
+    
+    insertedQuestions.sort((a, b) => b.totalMatches - a.totalMatches);
+
     res.status(201).json({
-      message: `Successfully saved ${insertedQuestions.length} question(s).`,
-      questions: insertedQuestions
+      message: `Successfully saved ${insertedQuestions.length} question(s). Skipped ${skippedQuestions.length}.`,
+      questions: insertedQuestions,
+      skipped: skippedQuestions
     });
 
   } catch (err) {
@@ -148,10 +197,6 @@ router.post('/image/confirm', verifyToken, aiLimiter, upload.single('image'), as
   try {
     await pool.query('BEGIN');
 
-    const processedBuffer = await preprocessImage(req.file.buffer);
-    const cloudinaryResult = await uploadToCloudinary(processedBuffer);
-    const image_url = cloudinaryResult.secure_url;
-
     let paperResult = await pool.query(
       `SELECT id FROM question_papers WHERE subject_id = $1 AND semester = $2 AND year = $3 AND exam_type = $4`,
       [subject_id, semester || null, year || null, exam_type || null]
@@ -169,7 +214,8 @@ router.post('/image/confirm', verifyToken, aiLimiter, upload.single('image'), as
     }
 
     const questionsArray = splitQuestions(text);
-    const insertedQuestions = [];
+    const questionsToInsert = [];
+    const skippedQuestions = [];
 
     for (const qText of questionsArray) {
       const clean = cleanText(qText);
@@ -181,33 +227,99 @@ router.post('/image/confirm', verifyToken, aiLimiter, upload.single('image'), as
       });
 
       const textHash = generateTextHash(qText);
-      let embeddingVector;
+      let embeddingVector = null;
+      let skip = false;
+      let skipReason = '';
+      let totalMatches = 0;
+      let topMatches = [];
 
-      const existingCheck = await pool.query(
-        'SELECT embedding FROM questions WHERE text_hash = $1 LIMIT 1',
-        [textHash]
+      const hashCheck = await pool.query(
+        `SELECT q.paper_id, q.embedding FROM questions q
+         JOIN question_papers qp ON q.paper_id = qp.id
+         WHERE q.text_hash = $1 AND qp.subject_id = $2 LIMIT 1`,
+        [textHash, subject_id]
       );
 
-      if (existingCheck.rows.length > 0) {
-        embeddingVector = existingCheck.rows[0].embedding;
-        if (typeof embeddingVector !== 'string') embeddingVector = JSON.stringify(embeddingVector);
-      } else {
-        const rawVector = await generateEmbedding(qText);
-        embeddingVector = JSON.stringify(rawVector);
+      if (hashCheck.rows.length > 0) {
+        if (hashCheck.rows[0].paper_id === paper_id) {
+          skip = true;
+          skipReason = 'Exact text already exists in this paper.';
+        } else {
+          embeddingVector = hashCheck.rows[0].embedding;
+          if (typeof embeddingVector !== 'string') embeddingVector = JSON.stringify(embeddingVector);
+        }
       }
 
+      if (!skip) {
+        if (!embeddingVector) {
+          const rawVector = await generateEmbedding(qText);
+          embeddingVector = JSON.stringify(rawVector);
+        }
+
+        const simCheck = await pool.query(
+          `SELECT q.paper_id, q.clean_text, 1 - (q.embedding <=> $1::vector) AS similarity
+           FROM questions q
+           JOIN question_papers qp ON q.paper_id = qp.id
+           WHERE qp.subject_id = $2 AND 1 - (q.embedding <=> $1::vector) > $3
+           ORDER BY similarity DESC LIMIT 5`,
+          [embeddingVector, subject_id, SIMILARITY_THRESHOLD]
+        );
+
+        if (simCheck.rows.length > 0) {
+          if (simCheck.rows[0].paper_id === paper_id) {
+            skip = true;
+            skipReason = 'Very similar question already exists in this paper.';
+          } else {
+            const trueCountCheck = await pool.query(
+              `SELECT COUNT(*) FROM questions q
+               JOIN question_papers qp ON q.paper_id = qp.id
+               WHERE qp.subject_id = $1 AND 1 - (q.embedding <=> $2::vector) > $3`,
+              [subject_id, embeddingVector, SIMILARITY_THRESHOLD]
+            );
+            totalMatches = parseInt(trueCountCheck.rows[0].count, 10);
+            topMatches = simCheck.rows.slice(0, 3).map(m => ({ text: m.clean_text, similarity: m.similarity }));
+          }
+        }
+      }
+
+      if (skip) {
+        skippedQuestions.push({ text: clean, reason: skipReason });
+      } else {
+        questionsToInsert.push({ qText, clean, metadata_hints, textHash, embeddingVector, totalMatches, topMatches });
+      }
+    }
+
+    if (questionsToInsert.length === 0) {
+      await pool.query('COMMIT');
+      return res.status(200).json({
+        message: `Saved 0 questions. Skipped ${skippedQuestions.length}.`,
+        questions: [],
+        skipped: skippedQuestions
+      });
+    }
+
+    const processedBuffer = await preprocessImage(req.file.buffer);
+    const cloudinaryResult = await uploadToCloudinary(processedBuffer);
+    const image_url = cloudinaryResult.secure_url;
+
+    const insertedQuestions = [];
+    for (const q of questionsToInsert) {
       const qResult = await pool.query(
         `INSERT INTO questions (paper_id, uploader_id, raw_text, clean_text, image_url, metadata_hints, text_hash, embedding)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, clean_text`,
-        [paper_id, uploader_id, qText, clean, image_url, metadata_hints, textHash, embeddingVector]
+        [paper_id, uploader_id, q.qText, q.clean, image_url, q.metadata_hints, q.textHash, q.embeddingVector]
       );
-      insertedQuestions.push(qResult.rows[0]);
+      insertedQuestions.push({ ...qResult.rows[0], totalMatches: q.totalMatches, topMatches: q.topMatches });
     }
 
     await pool.query('COMMIT');
+    
+    insertedQuestions.sort((a, b) => b.totalMatches - a.totalMatches);
+
     res.status(201).json({
-      message: `Successfully saved ${insertedQuestions.length} question(s).`,
+      message: `Successfully saved ${insertedQuestions.length} question(s). Skipped ${skippedQuestions.length}.`,
       questions: insertedQuestions,
+      skipped: skippedQuestions,
       image_url
     });
 

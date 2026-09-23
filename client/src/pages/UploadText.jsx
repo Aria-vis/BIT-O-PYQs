@@ -7,6 +7,7 @@ import Spinner from '../components/Spinner';
 
 export default function UploadText() {
   const [warnings, setWarnings] = useState([]);
+  const [skipped, setSkipped] = useState([]);
   const [selectedUniversity, setSelectedUniversity] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
@@ -77,6 +78,8 @@ export default function UploadText() {
     e.preventDefault();
     setError('');
     setSuccessData(null);
+    setWarnings([]);
+    setSkipped([]);
 
     if (!selectedSubject) return setError('Please select a subject from the academic hierarchy.');
     if (!rawText.trim()) return setError('Please paste some question text.');
@@ -105,46 +108,15 @@ export default function UploadText() {
       setSuccessData(data);
       setRawText('');
 
-      const newWarnings = [];
-      for (const q of (data.questions || [])) {
-        try {
-          const dupRes = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/${q.id}/duplicates`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          const dupData = await dupRes.json();
-          if (dupData.matches && dupData.matches.length > 0) {
-            newWarnings.push({ uploaded: q, matches: dupData.matches });
-          }
-        } catch (err) {
-          console.error('Failed to check for duplicates:', err);
-        }
-      }
-
-      if (newWarnings.length > 0) {
-        setWarnings(newWarnings);
-      }
+      // New Inline Data Handling
+      setSkipped(data.skipped || []);
+      const newWarnings = (data.questions || []).filter(q => q.totalMatches > 0);
+      setWarnings(newWarnings);
 
     } catch (err) {
       setError(err.message);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleKeepDuplicate = (id) => {
-    setWarnings(prev => prev.filter(w => w.uploaded.id !== id));
-  };
-
-  const handleDeleteDuplicate = async (id) => {
-    try {
-      const token = sessionStorage.getItem('token');
-      await fetch(`${import.meta.env.VITE_API_URL}/api/questions/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      setWarnings(prev => prev.filter(w => w.uploaded.id !== id));
-    } catch (err) {
-      console.error('Failed to delete question', err);
     }
   };
 
@@ -159,18 +131,19 @@ export default function UploadText() {
         {successData && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded text-green-800">
             <strong>Success!</strong> {successData.message}
-            <div className="mt-2 text-sm text-green-700">
-              (In the future, a link to view these saved questions will go right here.)
-            </div>
+          </div>
+        )}
+
+        {skipped.length > 0 && (
+          <div className="mb-6 p-4 bg-gray-100 border border-gray-300 rounded text-gray-700">
+            <strong>ℹ️ Skipped {skipped.length} question(s)</strong> that already existed in this exact paper and weren't added again.
           </div>
         )}
 
         {warnings.map(warning => (
           <DuplicateWarning
-            key={warning.uploaded.id}
+            key={warning.id}
             warning={warning}
-            onKeep={handleKeepDuplicate}
-            onDelete={handleDeleteDuplicate}
           />
         ))}
 
@@ -201,7 +174,7 @@ export default function UploadText() {
               />
               <p className="text-xs text-gray-500 mt-1">Paste your file's name here and click away to automatically fill the details below.</p>
             </div>
-            <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Paper Details (Optional)</h3>
+            <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 mb-4 mt-6">Paper Details (Optional)</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>

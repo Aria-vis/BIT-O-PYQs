@@ -7,6 +7,7 @@ import Spinner from '../components/Spinner';
 
 export default function UploadImage() {
   const [warnings, setWarnings] = useState([]);
+  const [skipped, setSkipped] = useState([]);
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [ocrText, setOcrText] = useState('');
@@ -29,6 +30,7 @@ export default function UploadImage() {
     setFile(selectedFile);
     setPreviewUrl(URL.createObjectURL(selectedFile));
     setOcrText(''); setConfidence(null); setError(''); setSuccessData(null);
+    setWarnings([]); setSkipped([]);
 
     const { guesses, confidence } = parseFilename(selectedFile.name);
 
@@ -95,6 +97,8 @@ export default function UploadImage() {
 
     setIsUploading(true);
     setError('');
+    setWarnings([]);
+    setSkipped([]);
 
     const formData = new FormData();
     formData.append('image', file);
@@ -118,24 +122,10 @@ export default function UploadImage() {
       setSuccessData(data);
       setOcrText('');
 
-      const newWarnings = [];
-      for (const q of (data.questions || [])) {
-        try {
-          const dupRes = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/${q.id}/duplicates`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          const dupData = await dupRes.json();
-          if (dupData.matches && dupData.matches.length > 0) {
-            newWarnings.push({ uploaded: q, matches: dupData.matches });
-          }
-        } catch (err) {
-          console.error('Failed to check for duplicates:', err);
-        }
-      }
-
-      if (newWarnings.length > 0) {
-        setWarnings(newWarnings);
-      }
+      // New Inline Data Handling
+      setSkipped(data.skipped || []);
+      const newWarnings = (data.questions || []).filter(q => q.totalMatches > 0);
+      setWarnings(newWarnings);
 
     } catch (err) {
       setError(err.message);
@@ -144,45 +134,39 @@ export default function UploadImage() {
     }
   };
 
-  const handleKeepDuplicate = (id) => {
-    setWarnings(prev => prev.filter(w => w.uploaded.id !== id));
-  };
-
-  const handleDeleteDuplicate = async (id) => {
-    try {
-      const token = sessionStorage.getItem('token');
-      await fetch(`${import.meta.env.VITE_API_URL}/api/questions/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      setWarnings(prev => prev.filter(w => w.uploaded.id !== id));
-    } catch (err) {
-      console.error('Failed to delete question', err);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-6 border-b pb-4">
           <h1 className="text-3xl font-bold text-gray-800">Upload Image</h1>
-          <Link to="/dashboard" className="text-blue-600 hover:underline">← Dashboard</Link>
+          <Link to="/dashboard" className="text-blue-600 hover:underline">← Back to Dashboard</Link>
         </div>
 
         {error && <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded">{error}</div>}
+        
         {successData && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-800 rounded">
             <strong>Success!</strong> {successData.message}
-            <div className="mt-2"><a href={successData.image_url} target="_blank" rel="noreferrer" className="underline font-bold text-green-900">View uploaded image on Cloudinary</a></div>
+            {successData.image_url && (
+              <div className="mt-2">
+                <a href={successData.image_url} target="_blank" rel="noreferrer" className="underline font-bold text-green-900">
+                  View uploaded image on Cloudinary
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+
+        {skipped.length > 0 && (
+          <div className="mb-6 p-4 bg-gray-100 border border-gray-300 rounded text-gray-700">
+            <strong>ℹ️ Skipped {skipped.length} question(s)</strong> that already existed in this exact paper and weren't added again.
           </div>
         )}
 
         {warnings.map(warning => (
           <DuplicateWarning
-            key={warning.uploaded.id}
+            key={warning.id}
             warning={warning}
-            onKeep={handleKeepDuplicate}
-            onDelete={handleDeleteDuplicate}
           />
         ))}
 
@@ -229,7 +213,7 @@ export default function UploadImage() {
               </div>
               <div className="mt-8">
                 {isUploading ? (
-                  <Spinner text="Running OCR and analyzing image..." />
+                  <Spinner text="Vectorizing and verifying questions..." />
                 ) : (
                   <button
                     type="submit"
