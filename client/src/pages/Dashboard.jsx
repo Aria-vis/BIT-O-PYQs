@@ -3,7 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
-  const { logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -18,8 +18,8 @@ export default function Dashboard() {
           </button>
         </div>
 
-        <p className="text-gray-600 mb-6">
-          Welcome back to your dashboard.
+        <p className="text-gray-600 mb-6 text-lg">
+          Welcome back, <span className="font-semibold text-gray-800">{user?.name || user?.email || 'User'}</span>!
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

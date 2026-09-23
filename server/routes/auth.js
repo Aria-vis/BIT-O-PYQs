@@ -24,8 +24,8 @@ router.post('/signup', async (req, res) => {
     );
 
     const token = jwt.sign(
-      { userId: newUser.rows[0].id }, 
-      process.env.JWT_SECRET, 
+      { userId: newUser.rows[0].id },
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -66,20 +66,13 @@ router.post('/login', async (req, res) => {
     res.status(200).json({
       message: 'Login successful!',
       token,
-      user: { id: user.id, email: user.email }
+      user: { id: user.id, name: user.name, email: user.email }
     });
 
   } catch (error) {
     console.error('Login Error:', error.message);
     res.status(500).json({ error: 'Server error during login' });
   }
-});
-
-router.get('/profile', verifyToken, (req, res) => {
-  res.status(200).json({
-    message: 'Welcome back to your dashboard',
-    userId: req.user.userId
-  });
 });
 
 export default router;

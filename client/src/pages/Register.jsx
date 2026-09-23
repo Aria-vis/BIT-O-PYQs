@@ -25,7 +25,7 @@ export default function Register() {
       const data = await response.json();
 
       if (response.ok) {
-        login(data.token);
+        login(data.token, data.user);
         navigate('/dashboard');
       } else {
         setError(data.error || 'Registration failed');
