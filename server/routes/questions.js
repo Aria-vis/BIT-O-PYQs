@@ -4,6 +4,7 @@ import verifyToken from '../middleware/authMiddleware.js';
 import { splitQuestions, cleanText } from '../utils/textParser.js';
 import upload from '../middleware/uploadMiddleware.js';
 import { preprocessImage, runOCR } from '../utils/ocrParser.js';
+import { extractTextLayer, renderPagesToImages } from '../utils/pdfParser.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
 import { parseFilenameWithLLM } from '../utils/llmFallback.js';
 import { generateEmbedding, generateTextHash, initModel } from '../utils/embeddings.js';
@@ -182,6 +183,48 @@ router.post('/image', verifyToken, (req, res) => {
     } catch (error) {
       console.error('Processing Pipeline Error:', error);
       res.status(500).json({ error: 'Failed to process the image.' });
+    }
+  });
+});
+
+router.post('/pdf', verifyToken, (req, res) => {
+  const uploadSingle = upload.single('document');
+
+  uploadSingle(req, res, async (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') return res.status(400).json({ error: 'File size exceeds the 5MB limit.' });
+      if (err.message === 'INVALID_FILE_TYPE') return res.status(400).json({ error: 'Invalid file type. Only JPEG, PNG, WEBP, and PDF are allowed.' });
+      return res.status(500).json({ error: `Upload error: ${err.message}` });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No PDF file provided.' });
+    }
+
+    try {
+      let method = 'text_layer';
+      let extractedText = await extractTextLayer(req.file.buffer);
+
+      if (!extractedText) {
+        method = 'ocr_fallback';
+        extractedText = await renderPagesToImages(req.file.buffer);
+      }
+
+      if (!extractedText) {
+        return res.status(422).json({
+          error: 'Failed to extract text from this PDF. The document may be empty or unreadable.',
+        });
+      }
+
+      res.status(200).json({
+        message: 'PDF processed successfully.',
+        extractedText,
+        method
+      });
+
+    } catch (error) {
+      console.error('PDF Processing Error:', error);
+      res.status(500).json({ error: 'Failed to process the PDF.' });
     }
   });
 });

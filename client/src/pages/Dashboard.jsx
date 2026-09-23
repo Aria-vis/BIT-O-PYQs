@@ -31,7 +31,7 @@ export default function Dashboard() {
 
           <Link to="/upload-image" className="block bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition text-center hover:border-blue-300">
             <div className="text-4xl mb-3">📸</div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Upload Image</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Upload Documents</h2>
             <p className="text-sm text-gray-600">Snap a photo and let our AI read the text.</p>
           </Link>
 
