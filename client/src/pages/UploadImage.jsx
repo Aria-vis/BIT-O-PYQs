@@ -38,7 +38,7 @@ export default function UploadImage() {
       if (guesses.examType) setExamType(guesses.examType);
     } else {
       try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/parse-filename`, {
           method: 'POST',
           headers: {
@@ -69,7 +69,7 @@ export default function UploadImage() {
     formData.append('image', file);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/image`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
@@ -105,7 +105,7 @@ export default function UploadImage() {
     if (examType) formData.append('exam_type', examType);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/image/confirm`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
@@ -150,7 +150,7 @@ export default function UploadImage() {
 
   const handleDeleteDuplicate = async (id) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       await fetch(`${import.meta.env.VITE_API_URL}/api/questions/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }

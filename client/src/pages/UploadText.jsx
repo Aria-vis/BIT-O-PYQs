@@ -31,7 +31,7 @@ export default function UploadText() {
 
     if (confidence < 50) {
       try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/parse-filename`, {
           method: 'POST',
           headers: {
@@ -83,7 +83,7 @@ export default function UploadText() {
 
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/text`, {
         method: 'POST',
         headers: {
@@ -137,7 +137,7 @@ export default function UploadText() {
 
   const handleDeleteDuplicate = async (id) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       await fetch(`${import.meta.env.VITE_API_URL}/api/questions/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }

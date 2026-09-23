@@ -7,7 +7,7 @@ export default function HierarchyPicker({
   selectedSubject, setSelectedSubject,
 }) {
   const queryClient = useQueryClient();
-  const token = localStorage.getItem('token'); 
+  const token = sessionStorage.getItem('token'); 
 
   const [isAddingUniv, setIsAddingUniv] = useState(false);
   const [newUnivName, setNewUnivName] = useState('');
