@@ -58,9 +58,9 @@ router.post('/text', verifyToken, aiLimiter, async (req, res) => {
     for (const qText of questionsArray) {
       const clean = cleanText(qText);
       const parsedHints = req.body.hints ? (typeof req.body.hints === 'string' ? JSON.parse(req.body.hints) : req.body.hints) : {};
-      
+
       const metadata_hints = JSON.stringify({
-        inferred_from_filename: parsedHints, 
+        inferred_from_filename: parsedHints,
         final_confirmed_values: { semester, year, exam_type }
       });
 
@@ -99,24 +99,18 @@ router.post('/text', verifyToken, aiLimiter, async (req, res) => {
            FROM questions q
            JOIN question_papers qp ON q.paper_id = qp.id
            WHERE qp.subject_id = $2 AND 1 - (q.embedding <=> $1::vector) > $3
-           ORDER BY similarity DESC LIMIT 5`,
+           ORDER BY similarity DESC`,
           [embeddingVector, subject_id, SIMILARITY_THRESHOLD]
         );
 
-        if (simCheck.rows.length > 0) {
-          if (simCheck.rows[0].paper_id === paper_id) {
-            skip = true;
-            skipReason = 'Very similar question already exists in this paper.';
-          } else {
-            const trueCountCheck = await pool.query(
-              `SELECT COUNT(*) FROM questions q
-               JOIN question_papers qp ON q.paper_id = qp.id
-               WHERE qp.subject_id = $1 AND 1 - (q.embedding <=> $2::vector) > $3`,
-              [subject_id, embeddingVector, SIMILARITY_THRESHOLD]
-            );
-            totalMatches = parseInt(trueCountCheck.rows[0].count, 10);
-            topMatches = simCheck.rows.slice(0, 3).map(m => ({ text: m.clean_text, similarity: m.similarity }));
-          }
+        const samePaperMatch = simCheck.rows.find(r => r.paper_id === paper_id);
+        if (samePaperMatch) {
+          skip = true;
+          skipReason = 'Very similar question already exists in this paper.';
+        } else {
+          const crossPaperRows = simCheck.rows.filter(r => r.paper_id !== paper_id);
+          totalMatches = crossPaperRows.length;
+          topMatches = crossPaperRows.slice(0, 3).map(m => ({ text: m.clean_text, similarity: m.similarity }));
         }
       }
 
@@ -126,14 +120,14 @@ router.post('/text', verifyToken, aiLimiter, async (req, res) => {
         const qResult = await pool.query(
           `INSERT INTO questions (paper_id, uploader_id, raw_text, clean_text, metadata_hints, text_hash, embedding)
            VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, clean_text`,
-          [paper_id, uploader_id, qText, clean, metadata_hints, textHash, embeddingVector] 
+          [paper_id, uploader_id, qText, clean, metadata_hints, textHash, embeddingVector]
         );
         insertedQuestions.push({ ...qResult.rows[0], totalMatches, topMatches });
       }
     }
 
     await pool.query('COMMIT');
-    
+
     insertedQuestions.sort((a, b) => b.totalMatches - a.totalMatches);
 
     res.status(201).json({
@@ -161,6 +155,10 @@ router.post('/image', verifyToken, (req, res) => {
 
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided.' });
+    }
+
+    if (req.file.mimetype === 'application/pdf') {
+      return res.status(400).json({ error: 'PDFs should be uploaded via the PDF upload option, not the image upload.' });
     }
 
     try {
@@ -237,6 +235,10 @@ router.post('/image/confirm', verifyToken, aiLimiter, upload.single('image'), as
     return res.status(400).json({ error: 'Image, text, and subject_id are required' });
   }
 
+  if (req.file.mimetype === 'application/pdf') {
+    return res.status(400).json({ error: 'PDFs should be uploaded via the PDF upload option, not the image upload.' });
+  }
+
   try {
     await pool.query('BEGIN');
 
@@ -304,24 +306,18 @@ router.post('/image/confirm', verifyToken, aiLimiter, upload.single('image'), as
            FROM questions q
            JOIN question_papers qp ON q.paper_id = qp.id
            WHERE qp.subject_id = $2 AND 1 - (q.embedding <=> $1::vector) > $3
-           ORDER BY similarity DESC LIMIT 5`,
+           ORDER BY similarity DESC`,
           [embeddingVector, subject_id, SIMILARITY_THRESHOLD]
         );
 
-        if (simCheck.rows.length > 0) {
-          if (simCheck.rows[0].paper_id === paper_id) {
-            skip = true;
-            skipReason = 'Very similar question already exists in this paper.';
-          } else {
-            const trueCountCheck = await pool.query(
-              `SELECT COUNT(*) FROM questions q
-               JOIN question_papers qp ON q.paper_id = qp.id
-               WHERE qp.subject_id = $1 AND 1 - (q.embedding <=> $2::vector) > $3`,
-              [subject_id, embeddingVector, SIMILARITY_THRESHOLD]
-            );
-            totalMatches = parseInt(trueCountCheck.rows[0].count, 10);
-            topMatches = simCheck.rows.slice(0, 3).map(m => ({ text: m.clean_text, similarity: m.similarity }));
-          }
+        const samePaperMatch = simCheck.rows.find(r => r.paper_id === paper_id);
+        if (samePaperMatch) {
+          skip = true;
+          skipReason = 'Very similar question already exists in this paper.';
+        } else {
+          const crossPaperRows = simCheck.rows.filter(r => r.paper_id !== paper_id);
+          totalMatches = crossPaperRows.length;
+          topMatches = crossPaperRows.slice(0, 3).map(m => ({ text: m.clean_text, similarity: m.similarity }));
         }
       }
 
@@ -356,7 +352,7 @@ router.post('/image/confirm', verifyToken, aiLimiter, upload.single('image'), as
     }
 
     await pool.query('COMMIT');
-    
+
     insertedQuestions.sort((a, b) => b.totalMatches - a.totalMatches);
 
     res.status(201).json({
@@ -387,7 +383,7 @@ router.get('/:id/duplicates', verifyToken, async (req, res) => {
       `SELECT q.embedding, qp.subject_id 
        FROM questions q
        JOIN question_papers qp ON q.paper_id = qp.id 
-       WHERE q.id = $1`, 
+       WHERE q.id = $1`,
       [id]
     );
 
@@ -478,9 +474,9 @@ router.get('/', verifyToken, async (req, res) => {
       ORDER BY q.created_at DESC
       LIMIT $${paramIndex++} OFFSET $${paramIndex++}
     `;
-    
+
     queryParams.push(limit, offset);
-    
+
     const { rows } = await pool.query(dataQuery, queryParams);
 
     res.json({
