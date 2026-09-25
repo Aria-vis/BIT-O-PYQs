@@ -8,6 +8,7 @@ import { extractTextLayer, renderPagesToImages } from '../utils/pdfParser.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
 import { parseFilenameWithLLM } from '../utils/llmFallback.js';
 import { generateEmbedding, generateTextHash, initModel } from '../utils/embeddings.js';
+import { resolveDuplicateDecision } from '../utils/duplicateDetection.js';
 import rateLimit from 'express-rate-limit';
 
 const SIMILARITY_THRESHOLD = 0.85;
@@ -103,15 +104,11 @@ router.post('/text', verifyToken, aiLimiter, async (req, res) => {
           [embeddingVector, subject_id, SIMILARITY_THRESHOLD]
         );
 
-        const samePaperMatch = simCheck.rows.find(r => r.paper_id === paper_id);
-        if (samePaperMatch) {
-          skip = true;
-          skipReason = 'Very similar question already exists in this paper.';
-        } else {
-          const crossPaperRows = simCheck.rows.filter(r => r.paper_id !== paper_id);
-          totalMatches = crossPaperRows.length;
-          topMatches = crossPaperRows.slice(0, 3).map(m => ({ text: m.clean_text, similarity: m.similarity }));
-        }
+        const decision = resolveDuplicateDecision(simCheck.rows, paper_id);
+        skip = decision.skip;
+        skipReason = decision.skipReason;
+        totalMatches = decision.totalMatches;
+        topMatches = decision.topMatches;
       }
 
       if (skip) {
@@ -143,7 +140,7 @@ router.post('/text', verifyToken, aiLimiter, async (req, res) => {
   }
 });
 
-router.post('/image', verifyToken, (req, res) => {
+router.post('/image', verifyToken, aiLimiter, (req, res) => {
   const uploadSingle = upload.single('image');
 
   uploadSingle(req, res, async (err) => {
@@ -185,7 +182,7 @@ router.post('/image', verifyToken, (req, res) => {
   });
 });
 
-router.post('/pdf', verifyToken, (req, res) => {
+router.post('/pdf', verifyToken, aiLimiter, (req, res) => {
   const uploadSingle = upload.single('document');
 
   uploadSingle(req, res, async (err) => {
@@ -310,15 +307,11 @@ router.post('/image/confirm', verifyToken, aiLimiter, upload.single('image'), as
           [embeddingVector, subject_id, SIMILARITY_THRESHOLD]
         );
 
-        const samePaperMatch = simCheck.rows.find(r => r.paper_id === paper_id);
-        if (samePaperMatch) {
-          skip = true;
-          skipReason = 'Very similar question already exists in this paper.';
-        } else {
-          const crossPaperRows = simCheck.rows.filter(r => r.paper_id !== paper_id);
-          totalMatches = crossPaperRows.length;
-          topMatches = crossPaperRows.slice(0, 3).map(m => ({ text: m.clean_text, similarity: m.similarity }));
-        }
+        const decision = resolveDuplicateDecision(simCheck.rows, paper_id);
+        skip = decision.skip;
+        skipReason = decision.skipReason;
+        totalMatches = decision.totalMatches;
+        topMatches = decision.topMatches;
       }
 
       if (skip) {
@@ -416,7 +409,13 @@ router.get('/:id/duplicates', verifyToken, async (req, res) => {
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    await pool.query('DELETE FROM questions WHERE id = $1', [id]);
+    const result = await pool.query(
+      'DELETE FROM questions WHERE id = $1 AND uploader_id = $2 RETURNING id',
+      [id, req.user.userId]
+    );
+    if (result.rowCount === 0) {
+      return res.status(403).json({ error: 'You can only delete questions you uploaded.' });
+    }
     res.json({ message: 'Question deleted successfully' });
   } catch (err) {
     console.error(err);
@@ -469,7 +468,7 @@ router.get('/', verifyToken, async (req, res) => {
     const totalQuestions = parseInt(totalRes.rows[0].count);
 
     const dataQuery = `
-      SELECT q.id, q.clean_text, q.image_url, qp.semester, qp.year, qp.exam_type, s.name as subject_name
+      SELECT q.id, q.clean_text, q.image_url, q.uploader_id, qp.semester, qp.year, qp.exam_type, s.name as subject_name
       ${baseQuery} ${whereString}
       ORDER BY q.created_at DESC
       LIMIT $${paramIndex++} OFFSET $${paramIndex++}

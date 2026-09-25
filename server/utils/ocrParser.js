@@ -1,6 +1,9 @@
 import sharp from 'sharp';
 import Tesseract from 'tesseract.js';
 
+export function pickBestAngle(results) {
+  return results.reduce((max, current) => current.variance > max.variance ? current : max, { angle: 0, variance: -1 });
+}
 async function getVarianceAtAngle(buffer, angle) {
   const { data, info } = await sharp(buffer)
     .rotate(angle, { background: '#ffffff' })
@@ -39,7 +42,7 @@ async function estimateSkewAngle(buffer) {
   }
   
   const coarseResults = await Promise.all(coarsePromises);
-  const bestCoarse = coarseResults.reduce((max, current) => current.variance > max.variance ? current : max, { variance: -1 });
+  const bestCoarse = pickBestAngle(coarseResults);
 
   const finePromises = [];
   for (let angle = bestCoarse.angle - 1; angle <= bestCoarse.angle + 1; angle += 0.1) {
@@ -48,7 +51,7 @@ async function estimateSkewAngle(buffer) {
   }
   
   const fineResults = await Promise.all(finePromises);
-  const bestFine = fineResults.reduce((max, current) => current.variance > max.variance ? current : max, { variance: -1 });
+  const bestFine = pickBestAngle(fineResults);
 
   return bestFine.angle;
 }

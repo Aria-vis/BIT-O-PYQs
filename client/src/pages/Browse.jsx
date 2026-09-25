@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import HierarchyPicker from '../components/HierarchyPicker';
 import Spinner from '../components/Spinner';
 import EmptyState from '../components/EmptyState';
+import { AuthContext } from '../context/AuthContext';
 
 export default function Browse() {
   const [selectedUniversity, setSelectedUniversity] = useState('');
@@ -16,6 +17,36 @@ export default function Browse() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  const { user } = useContext(AuthContext);
+  const [expandedId, setExpandedId] = useState(null);
+  const [historyById, setHistoryById] = useState({});
+
+  const toggleHistory = async (questionId) => {
+    if (expandedId === questionId) { setExpandedId(null); return; }
+    setExpandedId(questionId);
+    if (!historyById[questionId]) {
+      const token = sessionStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/${questionId}/duplicates`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      setHistoryById(prev => ({ ...prev, [questionId]: data.matches || [] }));
+    }
+  };
+
+  const handleDelete = async (questionId) => {
+    if (!window.confirm('Delete this question permanently?')) return;
+    const token = sessionStorage.getItem('token');
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/${questionId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok) {
+      // Assuming your questions state is named 'questions'
+      setQuestions(prev => prev.filter(q => q.id !== questionId));
+    }
+  };
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -125,6 +156,32 @@ export default function Browse() {
                       </a>
                     </div>
                   )}
+
+                  <div className="mt-3 flex items-center gap-4 text-xs">
+                    <button onClick={() => toggleHistory(q.id)} className="text-blue-600 hover:underline font-medium">
+                      {expandedId === q.id ? 'Hide match history' : 'View match history'}
+                    </button>
+                    {user?.id === q.uploader_id && (
+                      <button onClick={() => handleDelete(q.id)} className="text-red-600 hover:underline font-medium">
+                        Delete
+                      </button>
+                    )}
+                  </div>
+
+                  {expandedId === q.id && (
+                    <div className="mt-2 space-y-2">
+                      {(historyById[q.id] || []).length === 0 ? (
+                        <p className="text-xs text-gray-500">No other matching questions found.</p>
+                      ) : (
+                        historyById[q.id].map(match => (
+                          <div key={match.id} className="bg-gray-50 border border-gray-200 rounded p-2 text-xs">
+                            <span className="font-bold text-gray-600">{(match.similarity * 100).toFixed(1)}% match:</span> {match.clean_text}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
                 </div>
               ))}
             </div>

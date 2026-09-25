@@ -5,12 +5,16 @@ import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { createCanvas } from '@napi-rs/canvas';
 import { preprocessImage, runOCR } from './ocrParser.js';
 
+export function hasUsableTextLayer(text, minLength = 50) {
+  return Boolean(text && text.trim().length > minLength);
+}
+
 export async function extractTextLayer(buffer) {
   try {
     const data = await pdfParse(buffer);
     const text = data.text ? data.text.trim() : '';
-    
-    if (text.length > 50) {
+
+    if (hasUsableTextLayer(text)) {
       return text;
     }
     return null;
@@ -27,7 +31,7 @@ export async function renderPagesToImages(buffer) {
 
   for (let i = 1; i <= numPages; i++) {
     const page = await pdf.getPage(i);
-    const viewport = page.getViewport({ scale: 2.0 }); 
+    const viewport = page.getViewport({ scale: 2.0 });
 
     const canvas = createCanvas(viewport.width, viewport.height);
     const ctx = canvas.getContext('2d');
@@ -42,7 +46,7 @@ export async function renderPagesToImages(buffer) {
 
     const processedBuffer = await preprocessImage(imageBuffer);
     const { text } = await runOCR(processedBuffer);
-    
+
     fullText += text + '\n\n';
   }
 

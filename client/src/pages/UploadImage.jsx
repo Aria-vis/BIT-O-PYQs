@@ -252,7 +252,7 @@ export default function UploadImage() {
                 <input type="number" placeholder="Sem" value={semester} onChange={(e) => setSemester(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <input type="number" placeholder="Year" value={year} onChange={(e) => setYear(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <select value={examType} onChange={(e) => setExamType(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">Type</option><option value="Midterm">Midterm</option><option value="Final">Final</option>
+                  <option value="">Type</option><option value="Midterm">Midterm</option><option value="Final">Final</option><option value="Quiz">Quiz</option><option value="Assignment">Assignment</option>
                 </select>
               </div>
               <div className="mt-8">
