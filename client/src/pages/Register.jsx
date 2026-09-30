@@ -103,7 +103,7 @@ export default function Register() {
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={() => setError('Google Registration Failed')}
-                text="signup_with"
+                text="continue_with"
               />
             </div>
             
