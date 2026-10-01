@@ -163,21 +163,21 @@ export default function UploadImage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-6 border-b pb-4">
-          <h1 className="text-3xl font-bold text-gray-800">Upload Document or Image</h1>
-          <Link to="/dashboard" className="text-blue-600 hover:underline">← Back to Dashboard</Link>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8 transition-colors duration-300">
+      <div className="max-w-5xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-300">
+        <div className="flex justify-between items-center mb-6 border-b dark:border-gray-700 pb-4">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Upload Document or Image</h1>
+          <Link to="/dashboard" className="text-[#FF9FFC] hover:underline font-medium">← Back to Dashboard</Link>
         </div>
 
-        {error && <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded">{error}</div>}
+        {error && <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-300 rounded">{error}</div>}
         
         {successData && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-800 rounded">
+          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 text-green-800 dark:text-green-300 rounded">
             <strong>Success!</strong> {successData.message}
             {successData.image_url && (
               <div className="mt-2">
-                <a href={successData.image_url} target="_blank" rel="noreferrer" className="underline font-bold text-green-900">
+                <a href={successData.image_url} target="_blank" rel="noreferrer" className="underline font-bold text-green-900 dark:text-green-300">
                   View uploaded image on Cloudinary
                 </a>
               </div>
@@ -186,7 +186,7 @@ export default function UploadImage() {
         )}
 
         {skipped.length > 0 && (
-          <div className="mb-6 p-4 bg-gray-100 border border-gray-300 rounded text-gray-700">
+          <div className="mb-6 p-4 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300">
             <strong>ℹ️ Skipped {skipped.length} question(s)</strong> that already existed in this exact paper and weren't added again.
           </div>
         )}
@@ -197,23 +197,23 @@ export default function UploadImage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-6">
-            <div className="bg-gray-50 p-6 rounded border border-gray-200 border-dashed text-center">
+            <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded border border-gray-200 dark:border-gray-600 border-dashed text-center">
               <input 
                 type="file" 
                 accept="image/jpeg, image/png, image/webp, application/pdf" 
                 onChange={handleFileChange} 
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]" 
               />
               
               {previewUrl && <img src={previewUrl} alt="Preview" className="mt-4 max-h-64 mx-auto rounded shadow-sm" />}
               {file && !previewUrl && (
-                <div className="mt-4 p-4 bg-blue-50 text-blue-800 rounded shadow-sm">
+                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 rounded shadow-sm">
                   📄 <strong>{file.name}</strong> selected.
                 </div>
               )}
               
               {file && !ocrText && (
-                <button onClick={handleExtractText} disabled={isExtracting} className="mt-4 bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900 disabled:bg-gray-400">
+                <button onClick={handleExtractText} disabled={isExtracting} className="mt-4 bg-gray-800 dark:bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-900 dark:hover:bg-gray-500 disabled:bg-gray-400">
                   {isExtracting ? 'Extracting Text...' : 'Extract Text'}
                 </button>
               )}
@@ -230,9 +230,9 @@ export default function UploadImage() {
 
           {ocrText && (
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="bg-blue-50 p-4 rounded border border-blue-100">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded border border-blue-100 dark:border-blue-800">
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-bold text-blue-900">Review & Edit Extracted Text</h3>
+                  <h3 className="font-bold text-blue-900 dark:text-blue-300">Review & Edit Extracted Text</h3>
                   {confidence && (
                     <span className={`px-2 py-1 text-xs font-bold rounded ${confidence > 80 ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}`}>
                       {confidence}% OCR Match
@@ -244,14 +244,14 @@ export default function UploadImage() {
                     </span>
                   )}
                 </div>
-                <textarea rows="10" value={ocrText} onChange={(e) => setOcrText(e.target.value)} className="w-full border p-3 rounded font-mono text-sm focus:ring-blue-500" />
-                <p className="text-xs text-blue-600 mt-2">Fix any typos. Ensure multi-part questions are numbered correctly (e.g. 1., 2.) so the auto-splitter works.</p>
+                <textarea rows="10" value={ocrText} onChange={(e) => setOcrText(e.target.value)} className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-3 rounded font-mono text-sm focus:ring-[#FF9FFC]" />
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">Fix any typos. Ensure multi-part questions are numbered correctly (e.g. 1., 2.) so the auto-splitter works.</p>
               </div>
 
               <div className="grid grid-cols-3 gap-2">
-                <input type="number" placeholder="Sem" value={semester} onChange={(e) => setSemester(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input type="number" placeholder="Year" value={year} onChange={(e) => setYear(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <select value={examType} onChange={(e) => setExamType(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="number" placeholder="Sem" value={semester} onChange={(e) => setSemester(e.target.value)} className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]" />
+                <input type="number" placeholder="Year" value={year} onChange={(e) => setYear(e.target.value)} className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]" />
+                <select value={examType} onChange={(e) => setExamType(e.target.value)} className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]">
                   <option value="">Type</option><option value="Midterm">Midterm</option><option value="Final">Final</option><option value="Quiz">Quiz</option><option value="Assignment">Assignment</option>
                 </select>
               </div>
@@ -259,7 +259,7 @@ export default function UploadImage() {
                 {isUploading ? (
                   <Spinner text="Vectorizing and verifying questions..." />
                 ) : (
-                  <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition shadow-sm">
+                  <button type="submit" className="w-full bg-[#FF9FFC] text-gray-900 font-bold py-3 px-4 rounded-lg hover:opacity-90 transition shadow-sm">
                     Confirm and Upload
                   </button>
                 )}

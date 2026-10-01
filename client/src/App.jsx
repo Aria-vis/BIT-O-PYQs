@@ -6,10 +6,12 @@ import ProtectedRoute from './components/ProtectedRoute';
 import UploadText from './pages/UploadText';
 import UploadImage from './pages/UploadImage';
 import Browse from './pages/Browse';
+import ThemeToggle from './components/ThemeToggle';
 
 function App() {
   return (
     <Router>
+      <ThemeToggle />
       <Routes>
         {/* Redirect the root URL straight to login */}
         <Route path="/" element={<Navigate to="/login" replace />} />

@@ -43,7 +43,6 @@ export default function Browse() {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (res.ok) {
-      // Assuming your questions state is named 'questions'
       setQuestions(prev => prev.filter(q => q.id !== questionId));
     }
   };
@@ -84,21 +83,21 @@ export default function Browse() {
   }, [selectedUniversity, selectedCourse, selectedSubject, year, search]);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8 transition-colors duration-300">
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex justify-between items-center bg-white p-4 md:p-6 rounded-lg shadow-sm">
-          <h1 className="text-3xl font-bold text-gray-800">Browse Questions</h1>
-          <Link to="/dashboard" className="text-blue-600 hover:underline font-medium">← Dashboard</Link>
+        <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow-sm transition-colors duration-300">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Browse Questions</h1>
+          <Link to="/dashboard" className="text-[#FF9FFC] hover:underline font-medium">← Dashboard</Link>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-300">
           <div className="mb-6">
             <input
               type="text"
               placeholder="Search by keyword (e.g., 'Linked Lists')..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]"
             />
           </div>
 
@@ -111,20 +110,20 @@ export default function Browse() {
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year</label>
               <input
                 type="number"
                 placeholder="e.g. 2024"
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]"
               />
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+          <h2 className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2">
             Results ({totalQuestions} found)
           </h2>
 
@@ -138,31 +137,31 @@ export default function Browse() {
           ) : (
             <div className="space-y-6">
               {questions.map((q) => (
-                <div key={q.id} className="border border-gray-100 p-5 rounded-lg shadow-sm hover:shadow-md transition bg-gray-50">
+                <div key={q.id} className="border border-gray-100 dark:border-gray-700 p-5 rounded-lg shadow-sm hover:shadow-md transition bg-gray-50 dark:bg-gray-700/50">
                   <div className="flex justify-between items-start mb-3">
-                    <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">
+                    <span className="bg-blue-100 dark:bg-[#FF9FFC]/20 text-blue-800 dark:text-[#FF9FFC] text-xs font-bold px-2 py-1 rounded">
                       {q.subject_name}
                     </span>
-                    <span className="text-xs font-medium text-gray-500">
+                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                       {q.exam_type || 'Exam'} • {q.semester ? `Sem ${q.semester}` : ''} {q.year}
                     </span>
                   </div>
-                  <p className="text-gray-800 whitespace-pre-wrap font-medium">{q.clean_text}</p>
+                  <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-medium">{q.clean_text}</p>
 
                   {q.image_url && (
                     <div className="mt-4">
-                      <a href={q.image_url} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline flex items-center">
+                      <a href={q.image_url} target="_blank" rel="noreferrer" className="text-sm text-blue-600 dark:text-[#FF9FFC] hover:underline flex items-center">
                         📷 View Original Source Image
                       </a>
                     </div>
                   )}
 
                   <div className="mt-3 flex items-center gap-4 text-xs">
-                    <button onClick={() => toggleHistory(q.id)} className="text-blue-600 hover:underline font-medium">
+                    <button onClick={() => toggleHistory(q.id)} className="text-blue-600 dark:text-[#FF9FFC] hover:underline font-medium">
                       {expandedId === q.id ? 'Hide match history' : 'View match history'}
                     </button>
                     {user?.id === q.uploader_id && (
-                      <button onClick={() => handleDelete(q.id)} className="text-red-600 hover:underline font-medium">
+                      <button onClick={() => handleDelete(q.id)} className="text-red-600 dark:text-red-400 hover:underline font-medium">
                         Delete
                       </button>
                     )}
@@ -171,11 +170,11 @@ export default function Browse() {
                   {expandedId === q.id && (
                     <div className="mt-2 space-y-2">
                       {(historyById[q.id] || []).length === 0 ? (
-                        <p className="text-xs text-gray-500">No other matching questions found.</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">No other matching questions found.</p>
                       ) : (
                         historyById[q.id].map(match => (
-                          <div key={match.id} className="bg-gray-50 border border-gray-200 rounded p-2 text-xs">
-                            <span className="font-bold text-gray-600">{(match.similarity * 100).toFixed(1)}% match:</span> {match.clean_text}
+                          <div key={match.id} className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded p-2 text-xs">
+                            <span className="font-bold text-gray-600 dark:text-gray-400">{(match.similarity * 100).toFixed(1)}% match:</span> <span className="dark:text-gray-300">{match.clean_text}</span>
                           </div>
                         ))
                       )}
@@ -188,21 +187,21 @@ export default function Browse() {
           )}
 
           {totalPages > 1 && (
-            <div className="flex justify-between items-center mt-8 pt-4 border-t">
+            <div className="flex justify-between items-center mt-8 pt-4 border-t dark:border-gray-700">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 bg-gray-100 rounded disabled:opacity-50 hover:bg-gray-200"
+                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 dark:text-white rounded disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-gray-600"
               >
                 Previous
               </button>
-              <span className="text-sm text-gray-600 font-medium">
+              <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
                 Page {page} of {totalPages}
               </span>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-4 py-2 bg-gray-100 rounded disabled:opacity-50 hover:bg-gray-200"
+                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 dark:text-white rounded disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-gray-600"
               >
                 Next
               </button>

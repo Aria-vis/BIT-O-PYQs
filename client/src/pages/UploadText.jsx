@@ -121,21 +121,21 @@ export default function UploadText() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-4 md:p-6">
-        <div className="flex justify-between items-center mb-6 border-b pb-4">
-          <h1 className="text-3xl font-bold text-gray-800">Upload Raw Text</h1>
-          <Link to="/dashboard" className="text-blue-600 hover:underline font-medium">← Back to Dashboard</Link>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8 transition-colors duration-300">
+      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6 transition-colors duration-300">
+        <div className="flex justify-between items-center mb-6 border-b dark:border-gray-700 pb-4">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Upload Raw Text</h1>
+          <Link to="/dashboard" className="text-[#FF9FFC] hover:underline font-medium">← Back to Dashboard</Link>
         </div>
 
         {successData && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded text-green-800">
+          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded text-green-800 dark:text-green-300">
             <strong>Success!</strong> {successData.message}
           </div>
         )}
 
         {skipped.length > 0 && (
-          <div className="mb-6 p-4 bg-gray-100 border border-gray-300 rounded text-gray-700">
+          <div className="mb-6 p-4 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300">
             <strong>ℹ️ Skipped {skipped.length} question(s)</strong> that already existed in this exact paper and weren't added again.
           </div>
         )}
@@ -148,7 +148,7 @@ export default function UploadText() {
         ))}
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded text-red-800">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded text-red-800 dark:text-red-300">
             {error}
           </div>
         )}
@@ -160,33 +160,33 @@ export default function UploadText() {
             selectedSubject={selectedSubject} setSelectedSubject={setSelectedSubject}
           />
 
-          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Auto-Fill from Filename (Optional)</h3>
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b dark:border-gray-700 pb-2 mb-4">Auto-Fill from Filename (Optional)</h3>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Source Document Name</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Source Document Name</label>
               <input
                 type="text"
                 placeholder="e.g. CS201_Sem5_2023_Midterm.pdf"
                 value={filenameInput}
                 onChange={(e) => setFilenameInput(e.target.value)}
                 onBlur={handleFilenameBlur}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]"
               />
-              <p className="text-xs text-gray-500 mt-1">Paste your file's name here and click away to automatically fill the details below.</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Paste your file's name here and click away to automatically fill the details below.</p>
             </div>
-            <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 mb-4 mt-6">Paper Details (Optional)</h3>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b dark:border-gray-700 pb-2 mb-4 mt-6">Paper Details (Optional)</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>
-                <input type="number" placeholder="e.g. 5" value={semester} onChange={(e) => setSemester(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Semester</label>
+                <input type="number" placeholder="e.g. 5" value={semester} onChange={(e) => setSemester(e.target.value)} className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-                <input type="number" placeholder="e.g. 2023" value={year} onChange={(e) => setYear(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year</label>
+                <input type="number" placeholder="e.g. 2023" value={year} onChange={(e) => setYear(e.target.value)} className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Exam Type</label>
-                <select value={examType} onChange={(e) => setExamType(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Exam Type</label>
+                <select value={examType} onChange={(e) => setExamType(e.target.value)} className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]">
                   <option value="">-- Select --</option>
                   <option value="Midterm">Midterm</option>
                   <option value="Final">Final</option>
@@ -197,26 +197,26 @@ export default function UploadText() {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Paste Questions</h3>
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b dark:border-gray-700 pb-2 mb-4">Paste Questions</h3>
             <textarea
               rows="8"
               placeholder="Paste your exam text here... (e.g. '1. What is React? \n 2. Explain hooks.')"
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
-              className="w-full border border-gray-300 rounded p-3 font-mono text-sm focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-3 font-mono text-sm focus:ring-[#FF9FFC] focus:border-[#FF9FFC]"
             />
           </div>
 
           {splits.length > 0 && (
-            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200 shadow-sm">
-              <h3 className="text-lg font-semibold text-blue-900 border-b border-blue-200 pb-2 mb-4">
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm">
+              <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-300 border-b border-blue-200 dark:border-blue-800 pb-2 mb-4">
                 Live Preview: {splits.length} Question{splits.length !== 1 && 's'} Detected
               </h3>
               <div className="space-y-3">
                 {splits.map((q, index) => (
-                  <div key={index} className="bg-white p-3 rounded border border-blue-100 text-sm text-gray-800 shadow-sm whitespace-pre-wrap">
-                    <span className="font-bold text-blue-600 mr-2">Q{index + 1}:</span>
+                  <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded border border-blue-100 dark:border-gray-700 text-sm text-gray-800 dark:text-gray-200 shadow-sm whitespace-pre-wrap">
+                    <span className="font-bold text-blue-600 dark:text-[#FF9FFC] mr-2">Q{index + 1}:</span>
                     {q}
                   </div>
                 ))}
@@ -230,7 +230,7 @@ export default function UploadText() {
             ) : (
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition shadow-sm"
+                className="w-full bg-[#FF9FFC] text-gray-900 font-bold py-3 px-4 rounded-lg hover:opacity-90 transition shadow-sm"
               >
                 Upload and Process Text
               </button>

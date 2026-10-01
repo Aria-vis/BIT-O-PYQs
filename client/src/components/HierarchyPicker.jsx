@@ -129,13 +129,13 @@ export default function HierarchyPicker({
   };
 
   return (
-    <div className="space-y-6 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-      <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Academic Hierarchy</h3>
+    <div className="space-y-6 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-300">
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b dark:border-gray-700 pb-2">Academic Hierarchy</h3>
       
       {/* 1. UNIVERSITY LEVEL */}
       <div>
         <div className="flex justify-between items-center mb-1">
-          <label className="block text-sm font-medium text-gray-700">University</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">University</label>
           <button type="button" onClick={() => setIsAddingUniv(!isAddingUniv)} className="text-xs text-blue-600 hover:underline">
             {isAddingUniv ? 'Cancel' : '+ Add New'}
           </button>
@@ -151,7 +151,7 @@ export default function HierarchyPicker({
             </button>
           </form>
         ) : (
-          <select value={selectedUniversity} onChange={handleUniversityChange} disabled={isLoadingUnivs} className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100">
+          <select value={selectedUniversity} onChange={handleUniversityChange} disabled={isLoadingUnivs} className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-2 focus:ring-[#FF9FFC] focus:border-[#FF9FFC] disabled:bg-gray-100 dark:disabled:bg-gray-600">
             <option value="">{isLoadingUnivs ? 'Loading...' : '-- Select University --'}</option>
             {universities?.map((univ) => <option key={univ.id} value={univ.id}>{univ.name} ({univ.short_code})</option>)}
           </select>
@@ -161,7 +161,7 @@ export default function HierarchyPicker({
       {/* 2. COURSE LEVEL */}
       <div>
         <div className="flex justify-between items-center mb-1">
-          <label className="block text-sm font-medium text-gray-700">Course</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Course</label>
           {selectedUniversity && (
             <button type="button" onClick={() => setIsAddingCourse(!isAddingCourse)} className="text-xs text-blue-600 hover:underline">
               {isAddingCourse ? 'Cancel' : '+ Add New'}
@@ -179,7 +179,7 @@ export default function HierarchyPicker({
             </button>
           </form>
         ) : (
-          <select value={selectedCourse} onChange={handleCourseChange} disabled={!selectedUniversity || isLoadingCourses} className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100">
+          <select value={selectedCourse} onChange={handleCourseChange} disabled={!selectedUniversity || isLoadingCourses} className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-2 focus:ring-[#FF9FFC] focus:border-[#FF9FFC] disabled:bg-gray-100 dark:disabled:bg-gray-600">
             <option value="">{!selectedUniversity ? 'Select a University first' : isLoadingCourses ? 'Loading...' : '-- Select Course --'}</option>
             {courses?.map((course) => <option key={course.id} value={course.id}>{course.name} ({course.code})</option>)}
           </select>
@@ -189,7 +189,7 @@ export default function HierarchyPicker({
       {/* 3. SUBJECT LEVEL */}
       <div>
         <div className="flex justify-between items-center mb-1">
-          <label className="block text-sm font-medium text-gray-700">Subject</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Subject</label>
           {selectedCourse && (
             <button type="button" onClick={() => setIsAddingSubject(!isAddingSubject)} className="text-xs text-blue-600 hover:underline">
               {isAddingSubject ? 'Cancel' : '+ Add New'}
@@ -207,7 +207,7 @@ export default function HierarchyPicker({
             </button>
           </form>
         ) : (
-          <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} disabled={!selectedCourse || isLoadingSubjects} className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100">
+          <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} disabled={!selectedCourse || isLoadingSubjects} className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-2 focus:ring-[#FF9FFC] focus:border-[#FF9FFC] disabled:bg-gray-100 dark:disabled:bg-gray-600">
             <option value="">{!selectedCourse ? 'Select a Course first' : isLoadingSubjects ? 'Loading...' : '-- Select Subject --'}</option>
             {subjects?.map((subject) => <option key={subject.id} value={subject.id}>{subject.name} ({subject.code})</option>)}
           </select>
