@@ -4,12 +4,14 @@ import { AuthContext } from '../context/AuthContext';
 import { ThemeContext } from '../context/ThemeContext';
 import { GoogleLogin } from '@react-oauth/google';
 import LiquidEther from '../components/LiquidEther/LiquidEther';
+import { InfinitySquareSnake } from '../components/InfinitySquareSnake';
 
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   
   const [step, setStep] = useState(1);
   const [otp, setOtp] = useState('');
@@ -21,6 +23,7 @@ export default function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/signup`, {
@@ -43,12 +46,15 @@ export default function Register() {
       }
     } catch (err) {
       setError('Network error. Is the server running?');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleVerify = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
@@ -67,6 +73,8 @@ export default function Register() {
       }
     } catch (err) {
       setError('Network error. Is the server running?');
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -133,8 +141,9 @@ export default function Register() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]"
+                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC] disabled:opacity-60"
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div>
@@ -143,8 +152,9 @@ export default function Register() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]"
+                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC] disabled:opacity-60"
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div>
@@ -153,15 +163,22 @@ export default function Register() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]"
+                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC] disabled:opacity-60"
                   required
+                  disabled={isLoading}
                 />
               </div>
               <button
                 type="submit"
-                className="w-full bg-[#FF9FFC] text-gray-900 font-bold py-2 px-4 rounded-lg hover:opacity-90 transition"
+                disabled={isLoading}
+                className="w-full bg-[#FF9FFC] text-gray-900 font-bold py-2 px-4 rounded-lg hover:opacity-90 transition disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Register
+                {isLoading ? (
+                  <>
+                    <InfinitySquareSnake className="text-gray-900 text-lg [--duration:2.5s]" />
+                    Registering...
+                  </>
+                ) : 'Register'}
               </button>
             </form>
             <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
@@ -177,16 +194,23 @@ export default function Register() {
                 type="text"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                className="w-full text-center tracking-widest text-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]"
+                className="w-full text-center tracking-widest text-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC] disabled:opacity-60"
                 maxLength="6"
                 required
+                disabled={isLoading}
               />
             </div>
             <button
               type="submit"
-              className="w-full bg-[#FF9FFC] text-gray-900 font-bold py-2 px-4 rounded-lg hover:opacity-90 transition"
+              disabled={isLoading}
+              className="w-full bg-[#FF9FFC] text-gray-900 font-bold py-2 px-4 rounded-lg hover:opacity-90 transition disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Verify Account
+              {isLoading ? (
+                <>
+                  <InfinitySquareSnake className="text-gray-900 text-lg [--duration:2.5s]" />
+                  Verifying...
+                </>
+              ) : 'Verify Account'}
             </button>
           </form>
         )}

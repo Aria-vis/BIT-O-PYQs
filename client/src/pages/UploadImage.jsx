@@ -4,6 +4,7 @@ import HierarchyPicker from '../components/HierarchyPicker';
 import { parseFilename } from '../utils/filenameParser';
 import DuplicateWarning from '../components/DuplicateWarning';
 import Spinner from '../components/Spinner';
+import { InfinitySquareSnake } from '../components/InfinitySquareSnake';
 
 export default function UploadImage() {
   const [warnings, setWarnings] = useState([]);
@@ -14,6 +15,7 @@ export default function UploadImage() {
   const [confidence, setConfidence] = useState(null);
   const [pdfMethod, setPdfMethod] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
+  const [isParsingFilename, setIsParsingFilename] = useState(false);
   const [selectedUniversity, setSelectedUniversity] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
@@ -47,6 +49,7 @@ export default function UploadImage() {
       if (guesses.year) setYear(guesses.year);
       if (guesses.examType) setExamType(guesses.examType);
     } else {
+      setIsParsingFilename(true);
       try {
         const token = sessionStorage.getItem('token');
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/parse-filename`, {
@@ -63,6 +66,8 @@ export default function UploadImage() {
         }
       } catch (err) {
         console.warn('LLM Fallback skipped:', err.message);
+      } finally {
+        setIsParsingFilename(false);
       }
     }
   };
@@ -202,19 +207,26 @@ export default function UploadImage() {
                 type="file" 
                 accept="image/jpeg, image/png, image/webp, application/pdf" 
                 onChange={handleFileChange} 
-                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]" 
+                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC] disabled:opacity-60" 
+                disabled={isParsingFilename}
               />
               
               {previewUrl && <img src={previewUrl} alt="Preview" className="mt-4 max-h-64 mx-auto rounded shadow-sm" />}
               {file && !previewUrl && (
-                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 rounded shadow-sm">
+                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 rounded shadow-sm flex items-center justify-center gap-2">
                   📄 <strong>{file.name}</strong> selected.
+                  {isParsingFilename && <InfinitySquareSnake className="text-[#FF9FFC] text-sm [--duration:2s]" />}
                 </div>
               )}
               
               {file && !ocrText && (
-                <button onClick={handleExtractText} disabled={isExtracting} className="mt-4 bg-gray-800 dark:bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-900 dark:hover:bg-gray-500 disabled:bg-gray-400">
-                  {isExtracting ? 'Extracting Text...' : 'Extract Text'}
+                <button onClick={handleExtractText} disabled={isExtracting} className="mt-4 bg-gray-800 dark:bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-900 dark:hover:bg-gray-500 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto">
+                  {isExtracting ? (
+                    <>
+                      <InfinitySquareSnake className="text-white text-lg [--duration:2.5s]" />
+                      Extracting Text...
+                    </>
+                  ) : 'Extract Text'}
                 </button>
               )}
             </div>

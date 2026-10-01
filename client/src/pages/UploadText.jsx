@@ -4,6 +4,7 @@ import HierarchyPicker from '../components/HierarchyPicker';
 import { parseFilename } from '../utils/filenameParser';
 import DuplicateWarning from '../components/DuplicateWarning';
 import Spinner from '../components/Spinner';
+import { InfinitySquareSnake } from '../components/InfinitySquareSnake';
 
 export default function UploadText() {
   const [warnings, setWarnings] = useState([]);
@@ -18,6 +19,7 @@ export default function UploadText() {
   const [rawText, setRawText] = useState('');
   const [filenameInput, setFilenameInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isParsingFilename, setIsParsingFilename] = useState(false);
   const [error, setError] = useState('');
   const [successData, setSuccessData] = useState(null);
 
@@ -31,6 +33,7 @@ export default function UploadText() {
     if (guesses.examType && !examType) setExamType(guesses.examType);
 
     if (confidence < 50) {
+      setIsParsingFilename(true);
       try {
         const token = sessionStorage.getItem('token');
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/parse-filename`, {
@@ -51,6 +54,8 @@ export default function UploadText() {
         }
       } catch (error) {
         console.error("Failed to fetch filename hints from AI:", error);
+      } finally {
+        setIsParsingFilename(false);
       }
     }
   };
@@ -163,14 +168,18 @@ export default function UploadText() {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b dark:border-gray-700 pb-2 mb-4">Auto-Fill from Filename (Optional)</h3>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Source Document Name</label>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Source Document Name
+                {isParsingFilename && <InfinitySquareSnake className="text-[#FF9FFC] text-sm [--duration:2s]" />}
+              </label>
               <input
                 type="text"
                 placeholder="e.g. CS201_Sem5_2023_Midterm.pdf"
                 value={filenameInput}
                 onChange={(e) => setFilenameInput(e.target.value)}
                 onBlur={handleFilenameBlur}
-                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]"
+                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC] disabled:opacity-60"
+                disabled={isParsingFilename}
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Paste your file's name here and click away to automatically fill the details below.</p>
             </div>

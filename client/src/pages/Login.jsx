@@ -4,11 +4,13 @@ import { AuthContext } from '../context/AuthContext';
 import { ThemeContext } from '../context/ThemeContext';
 import { GoogleLogin } from '@react-oauth/google';
 import LiquidEther from '../components/LiquidEther/LiquidEther';
+import { InfinitySquareSnake } from '../components/InfinitySquareSnake';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
   const [otp, setOtp] = useState('');
 
@@ -26,6 +28,7 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
@@ -49,12 +52,15 @@ export default function Login() {
       }
     } catch (err) {
       setError('Network error. Is the server running?');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleVerify = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
@@ -73,6 +79,8 @@ export default function Login() {
       }
     } catch (err) {
       setError('Network error. Is the server running?');
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -139,8 +147,9 @@ export default function Login() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]"
+                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC] disabled:opacity-60"
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div>
@@ -149,12 +158,18 @@ export default function Login() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]"
+                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC] disabled:opacity-60"
                   required
+                  disabled={isLoading}
                 />
               </div>
-              <button type="submit" className="w-full bg-[#FF9FFC] text-gray-900 font-bold py-2 px-4 rounded-lg hover:opacity-90 transition">
-                Log In
+              <button type="submit" disabled={isLoading} className="w-full bg-[#FF9FFC] text-gray-900 font-bold py-2 px-4 rounded-lg hover:opacity-90 transition disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                {isLoading ? (
+                  <>
+                    <InfinitySquareSnake className="text-gray-900 text-lg [--duration:2.5s]" />
+                    Logging in...
+                  </>
+                ) : 'Log In'}
               </button>
             </form>
             <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
@@ -170,13 +185,19 @@ export default function Login() {
                 type="text"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                className="w-full text-center tracking-widest text-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC]"
+                className="w-full text-center tracking-widest text-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9FFC] disabled:opacity-60"
                 maxLength="6"
                 required
+                disabled={isLoading}
               />
             </div>
-            <button type="submit" className="w-full bg-[#FF9FFC] text-gray-900 font-bold py-2 px-4 rounded-lg hover:opacity-90 transition">
-              Verify & Log In
+            <button type="submit" disabled={isLoading} className="w-full bg-[#FF9FFC] text-gray-900 font-bold py-2 px-4 rounded-lg hover:opacity-90 transition disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              {isLoading ? (
+                <>
+                  <InfinitySquareSnake className="text-gray-900 text-lg [--duration:2.5s]" />
+                  Verifying...
+                </>
+              ) : 'Verify & Log In'}
             </button>
           </form>
         )}
