@@ -5,11 +5,13 @@ import { ThemeContext } from '../context/ThemeContext';
 import { GoogleLogin } from '@react-oauth/google';
 import LiquidEther from '../components/LiquidEther/LiquidEther';
 import { InfinitySquareSnake } from '../components/InfinitySquareSnake';
+import { useAuthFlow } from '../hooks/useAuthFlow';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
   const [otp, setOtp] = useState('');
@@ -57,53 +59,15 @@ export default function Login() {
     }
   };
 
-  const handleVerify = async (e) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
-    
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp }),
-      });
+  const { handleVerify, handleResendOtp, handleGoogleSuccess: handleGoogleAuth } = useAuthFlow({ 
+    email, 
+    otp, 
+    setError, 
+    setSuccessMsg, 
+    setIsLoading 
+  });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        login(data.token, data.user);
-        navigate('/dashboard');
-      } else {
-        setError(data.error || 'Verification failed');
-      }
-    } catch (err) {
-      setError('Network error. Is the server running?');
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setError('');
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/google`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential: credentialResponse.credential }),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        login(data.token, data.user);
-        navigate('/dashboard');
-      } else {
-        setError(data.error || 'Google Login failed');
-      }
-    } catch (err) {
-      setError('Network error during Google login. Is the server running?');
-    }
-  };
+  const handleGoogleSuccess = (credentialResponse) => handleGoogleAuth(credentialResponse, 'Login');
 
   return (
     <div className="relative flex h-screen items-center justify-center overflow-hidden bg-gray-100 dark:bg-gray-900">
@@ -120,6 +84,7 @@ export default function Login() {
         </h2>
 
         {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm">{error}</div>}
+        {successMsg && <div className="bg-green-100 text-green-700 p-3 rounded mb-4 text-sm">{successMsg}</div>}
 
         {!needsVerification ? (
           <>
@@ -199,6 +164,16 @@ export default function Login() {
                 </>
               ) : 'Verify & Log In'}
             </button>
+            <div className="text-center mt-4">
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={isLoading}
+                className="text-sm text-[#FF9FFC] hover:underline disabled:opacity-50 disabled:no-underline"
+              >
+                Didn't get the code? Resend
+              </button>
+            </div>
           </form>
         )}
       </div>
